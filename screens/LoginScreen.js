@@ -6,8 +6,10 @@ import {
   TextInput,
   TouchableOpacity,
   Dimensions,
+  ImageBackground,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import CheckBox from 'react-native-check-box';
 
 const { width } = Dimensions.get('window');
 
@@ -16,66 +18,75 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const navigation = useNavigation(); // Hook for navigation
+  const navigation = useNavigation();
 
   const handleLogin = () => {
-    // Add authentication logic if needed
-    // Example: if (email === 'test' && password === '12345') {}
-    navigation.navigate('Home'); // Navigate to HomeScreen after login
+    navigation.navigate('Home');
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <ImageBackground
+      source={require('../images/plate.jpg')}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>Login</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#fff"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#fff"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#fff"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#fff"
-        secureTextEntry={!showPassword}
-        value={password}
-        onChangeText={setPassword}
-      />
+        <View style={styles.passwordContainer}>
+          <View style={styles.checkboxContainer}>
+            <CheckBox
+              style={styles.checkbox}
+              onClick={() => setShowPassword(!showPassword)}
+              isChecked={showPassword}
+              checkBoxColor="#fff"
+            />
+            <Text style={styles.checkboxText}>Show Password</Text>
+          </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Recovery')}>
+            <Text style={styles.forgotPassword}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.passwordContainer}>
-        <TouchableOpacity
-          onPress={() => setShowPassword(!showPassword)}
-          style={styles.checkboxContainer}
-        >
-          <Text style={styles.checkboxText}>Show Password</Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>LOGIN</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.forgotPassword}>Forgot Password?</Text>
-        </TouchableOpacity>
+
+        <View style={styles.signupContainer}>
+          <Text style={styles.signupText}>Don't have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+            <Text style={styles.signupLink}>Sign up here</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>LOGIN</Text>
-      </TouchableOpacity>
-
-      <View style={styles.signupContainer}>
-        <Text style={styles.signupText}>Don't have an account? </Text>
-        <TouchableOpacity>
-          <Text style={styles.signupLink}>Sign up here</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#7A9F59',
+  },
+  container: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: 40,
@@ -103,14 +114,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  checkbox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   checkboxText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 12,
   },
   forgotPassword: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 12,
     textDecorationLine: 'underline',
+    marginLeft: 20,
+    textAlign: 'center',
   },
   loginButton: {
     width: width * 0.8,
