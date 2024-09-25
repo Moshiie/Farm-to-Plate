@@ -11,21 +11,24 @@ import {
   Pressable,
   Animated,
   Easing,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export default function SignupScreen() {
-  const navigation = useNavigation();
   const [fullname, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [modalAnimation] = useState(new Animated.Value(0));
 
+  const navigation = useNavigation();
+
   const handleSignup = () => {
+
     setModalVisible(true);
     Animated.timing(modalAnimation, {
       toValue: 1,
@@ -33,6 +36,7 @@ export default function SignupScreen() {
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
+ 
     setFullName('');
     setEmail('');
     setPassword('');
@@ -66,13 +70,16 @@ export default function SignupScreen() {
 
   return (
     <ImageBackground
-      source={require('../images/plate.jpg')}
+      source={require('../images/plate.jpg')} 
       style={styles.background}
       resizeMode="cover"
     >
       <View style={styles.container}>
+        <Image
+          source={require('../images/Farm to Plate.png')} 
+          style={styles.logo}
+        />
         <Text style={styles.title}>Sign Up</Text>
-
         <TextInput
           style={styles.input}
           placeholder="Full Name"
@@ -99,6 +106,14 @@ export default function SignupScreen() {
           <Text style={styles.signupButtonText}>SIGN UP</Text>
         </TouchableOpacity>
 
+        <View style={styles.loginContainer}>
+          <Text style={styles.loginText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginLink}>Login here</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Modal for signup success */}
         <Modal
           animationType="none"
           transparent={true}
@@ -114,7 +129,6 @@ export default function SignupScreen() {
                 <Icon name="check-circle" size={40} color="#fff" />
                 <Text style={styles.successText}>SUCCESS</Text>
               </View>
-              {/* Centered View for Modal Message and Tips */}
               <View style={styles.centeredTextContainer}>
                 <Text style={styles.modalMessage}>Your account has been created!</Text>
                 <Text style={styles.modalTips}>You can now log in and start using the app.</Text>
@@ -140,6 +154,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
+  },
   title: {
     fontSize: 40,
     color: '#fff',
@@ -162,11 +181,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    elevation: 2,
+    marginBottom: 30,
   },
   signupButtonText: {
     fontSize: 18,
     color: '#7A9F59',
+    fontWeight: 'bold',
+  },
+  loginContainer: {
+    flexDirection: 'row',
+  },
+  loginText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  loginLink: {
+    color: '#fff',
+    fontSize: 16,
+    textDecorationLine: 'underline',
     fontWeight: 'bold',
   },
   modalContainer: {
@@ -177,17 +209,13 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: width * 0.9,
-    height: height * 0.3,
     backgroundColor: '#fff',
     borderRadius: 20,
     alignItems: 'center',
     padding: 30,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
     shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 10,
   },
@@ -217,20 +245,20 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   centeredTextContainer: {
-    alignItems: 'center', // Center the text horizontally
-    justifyContent: 'center', // Center the text vertically if needed
-    marginBottom: 20, // Space between the text and the button
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
   modalMessage: {
     fontSize: 18,
     color: '#3D6F3D',
     fontWeight: 'bold',
-    textAlign: 'center', // Centered text
+    textAlign: 'center',
   },
   modalTips: {
     fontSize: 14,
     color: '#3D6F3D',
-    textAlign: 'center', // Centered text
+    textAlign: 'center',
   },
   modalButton: {
     backgroundColor: '#3D6F3D',

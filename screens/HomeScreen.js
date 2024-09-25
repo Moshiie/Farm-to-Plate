@@ -6,15 +6,14 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Import icons for navigation
-
+import { Ionicons } from '@expo/vector-icons'; 
 export default function HomeScreen() {
   const products = [
     { id: '1', name: 'Product Name', price: '₱ 0.00', sold: '# sold/s' },
     { id: '2', name: 'Product Name', price: '₱ 0.00', sold: '# sold/s' },
     { id: '3', name: 'Product Name', price: '₱ 0.00', sold: '# sold/s' },
     { id: '4', name: 'Product Name', price: '₱ 0.00', sold: '# sold/s' },
-    // Add more products if needed
+    
   ];
 
   const renderProduct = ({ item }) => (
@@ -111,17 +110,17 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 18,
     color: '#fff',
-    fontWeight: '400', // Normal font for non-selected categories
+    fontWeight: '400', 
   },
   selectedCategoryContainer: {
-    backgroundColor: '#1C3814', // Dark green background for "for you"
-    borderRadius: 20, // Rounded edges for the selected category
+    backgroundColor: '#1C3814',
+    borderRadius: 20, 
     paddingHorizontal: 15,
     paddingVertical: 5,
   },
   selectedCategoryText: {
     color: '#fff',
-    fontWeight: 'bold', // Bold font for the selected category
+    fontWeight: 'bold', 
   },
   recommendedTitle: {
     fontSize: 18,

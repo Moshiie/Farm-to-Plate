@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   ImageBackground,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import CheckBox from 'react-native-check-box';
@@ -26,11 +27,15 @@ export default function LoginScreen() {
 
   return (
     <ImageBackground
-      source={require('../images/plate.jpg')}
+      source={require('../images/plate.jpg')} // Replace with your background image
       style={styles.background}
       resizeMode="cover"
     >
       <View style={styles.container}>
+        <Image
+          source={require('../images/Farm to Plate.png')} // Add your logo image here
+          style={styles.logo}
+        />
         <Text style={styles.title}>Login</Text>
         <TextInput
           style={styles.input}
@@ -87,6 +92,11 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logo: {
+    width: 150,  // Adjust the size based on your logo
+    height: 150,
+    marginBottom: 20,
   },
   title: {
     fontSize: 40,
