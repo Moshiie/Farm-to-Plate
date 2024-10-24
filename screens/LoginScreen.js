@@ -27,13 +27,13 @@ export default function LoginScreen() {
 
   return (
     <ImageBackground
-      source={require('../images/plate.jpg')} // Replace with your background image
+      source={require('../images/plate.jpg')} 
       style={styles.background}
       resizeMode="cover"
     >
       <View style={styles.container}>
         <Image
-          source={require('../images/Farm to Plate.png')} // Add your logo image here
+          source={require('../images/Farm to Plate.png')} 
           style={styles.logo}
         />
         <Text style={styles.title}>Login</Text>
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 150,  // Adjust the size based on your logo
+    width: 150,  
     height: 150,
     marginBottom: 20,
   },
