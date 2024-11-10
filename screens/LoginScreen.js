@@ -8,9 +8,12 @@ import {
   Dimensions,
   ImageBackground,
   Image,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import CheckBox from 'react-native-check-box';
+import { LinearGradient } from 'expo-linear-gradient';
+import { supabase } from '../services/supabaseClient'; // Import Supabase client
 
 const { width } = Dimensions.get('window');
 
@@ -21,33 +24,48 @@ export default function LoginScreen() {
 
   const navigation = useNavigation();
 
-  const handleLogin = () => {
-    navigation.navigate('Home');
+  const handleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        Alert.alert('Login failed', error.message);
+      } else {
+        Alert.alert('Login successful', 'You have been logged in!');
+        navigation.navigate('Home'); // Navigate to Home after successful login
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
   };
 
   return (
     <ImageBackground
-      source={require('../images/plate.jpg')} 
+      source={require('../images/plate.jpg')}
       style={styles.background}
       resizeMode="cover"
     >
+      <View style={styles.overlay} />
       <View style={styles.container}>
         <Image
-          source={require('../images/Farm to Plate.png')} 
+          source={require('../images/Farm to Plate.png')}
           style={styles.logo}
         />
         <Text style={styles.title}>Login</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#fff"
+          placeholderTextColor="#ddd"
           value={email}
           onChangeText={setEmail}
         />
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#fff"
+          placeholderTextColor="#ddd"
           secureTextEntry={!showPassword}
           value={password}
           onChangeText={setPassword}
@@ -69,7 +87,12 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>LOGIN</Text>
+          <LinearGradient
+            colors={['#7A9F59', '#4C7D2D']}
+            style={styles.buttonGradient}
+          >
+            <Text style={styles.loginButtonText}>LOGIN</Text>
+          </LinearGradient>
         </TouchableOpacity>
 
         <View style={styles.signupContainer}>
@@ -89,32 +112,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
   container: {
     justifyContent: 'center',
     alignItems: 'center',
+    width: '85%',
   },
   logo: {
-    width: 150,  
-    height: 150,
+    width: 140,
+    height: 140,
     marginBottom: 20,
   },
   title: {
-    fontSize: 40,
+    fontSize: 36,
+    fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 50,
+    marginBottom: 40,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
   },
   input: {
-    width: width * 0.8,
+    width: '100%',
     height: 50,
-    backgroundColor: 'transparent',
-    borderBottomWidth: 1,
-    borderBottomColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 12,
     color: '#fff',
-    marginBottom: 30,
-    fontSize: 18,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    marginBottom: 20,
+    borderBottomColor: '#ddd',
+    borderBottomWidth: 1,
   },
   passwordContainer: {
-    width: width * 0.8,
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -124,40 +158,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  checkbox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   checkboxText: {
-    color: '#fff',
+    color: '#ddd',
     fontSize: 12,
+    marginLeft: 5,
   },
   forgotPassword: {
-    color: '#fff',
+    color: '#ddd',
     fontSize: 12,
     textDecorationLine: 'underline',
-    marginLeft: 20,
-    textAlign: 'center',
   },
   loginButton: {
-    width: width * 0.8,
+    width: '100%',
     height: 50,
-    backgroundColor: '#fff',
+    marginBottom: 30,
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  buttonGradient: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
-    marginBottom: 30,
   },
   loginButtonText: {
     fontSize: 18,
-    color: '#7A9F59',
     fontWeight: 'bold',
+    color: '#fff',
   },
   signupContainer: {
     flexDirection: 'row',
+    marginTop: 10,
   },
   signupText: {
-    color: '#fff',
+    color: '#ddd',
     fontSize: 16,
   },
   signupLink: {

@@ -12,9 +12,13 @@ import {
   Animated,
   Easing,
   Image,
+  Alert,
 } from 'react-native';
+import { supabase } from '../services/supabaseClient';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -27,19 +31,30 @@ export default function SignupScreen() {
 
   const navigation = useNavigation();
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullname } },
+      });
 
-    setModalVisible(true);
-    Animated.timing(modalAnimation, {
-      toValue: 1,
-      duration: 400,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: true,
-    }).start();
- 
-    setFullName('');
-    setEmail('');
-    setPassword('');
+      if (error) throw error;
+
+      setModalVisible(true);
+      Animated.timing(modalAnimation, {
+        toValue: 1,
+        duration: 400,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }).start();
+
+      setFullName('');
+      setEmail('');
+      setPassword('');
+    } catch (error) {
+      Alert.alert('Signup Error', error.message);
+    }
   };
 
   const closeModal = () => {
@@ -69,130 +84,157 @@ export default function SignupScreen() {
   };
 
   return (
-    <ImageBackground
-      source={require('../images/plate.jpg')} 
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.container}>
-        <Image
-          source={require('../images/Farm to Plate.png')} 
-          style={styles.logo}
-        />
-        <Text style={styles.title}>Sign Up</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          placeholderTextColor="#fff"
-          value={fullname}
-          onChangeText={setFullName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#fff"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#fff"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-          <Text style={styles.signupButtonText}>SIGN UP</Text>
-        </TouchableOpacity>
-
-        <View style={styles.loginContainer}>
-          <Text style={styles.loginText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.loginLink}>Login here</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ImageBackground
+        source={require('../images/plate.jpg')}
+        style={styles.background}
+        resizeMode="cover"
+      >
+        <View style={styles.overlay} />
+        <View style={styles.container}>
+          <Image
+            source={require('../images/Farm to Plate.png')}
+            style={styles.logo}
+          />
+          <Text style={styles.title}>Sign Up</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            placeholderTextColor="#ddd"
+            value={fullname}
+            onChangeText={setFullName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#ddd"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#ddd"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
+            <LinearGradient
+              colors={['#7A9F59', '#4C7D2D']}
+              style={styles.buttonGradient}
+            >
+              <Text style={styles.signupButtonText}>SIGN UP</Text>
+            </LinearGradient>
           </TouchableOpacity>
-        </View>
 
-        {/* Modal for signup success */}
-        <Modal
-          animationType="none"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={closeModal}
-        >
-          <View style={styles.modalContainer}>
-            <Animated.View style={[styles.modalView, animatedModalStyle]}>
-              <Pressable style={styles.closeButton} onPress={closeModal}>
-                <Text style={styles.closeButtonText}>✖</Text>
-              </Pressable>
-              <View style={styles.modalHeader}>
-                <Icon name="check-circle" size={40} color="#fff" />
-                <Text style={styles.successText}>SUCCESS</Text>
-              </View>
-              <View style={styles.centeredTextContainer}>
-                <Text style={styles.modalMessage}>Your account has been created!</Text>
-                <Text style={styles.modalTips}>You can now log in and start using the app.</Text>
-              </View>
-              <Pressable style={styles.modalButton} onPress={handleContinue}>
-                <Text style={styles.modalButtonText}>Continue</Text>
-              </Pressable>
-            </Animated.View>
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.loginLink}>Login here</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      </View>
-    </ImageBackground>
+
+          {/* Modal for signup success */}
+          <Modal
+            animationType="none"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={closeModal}
+          >
+            <View style={styles.modalContainer}>
+              <Animated.View style={[styles.modalView, animatedModalStyle]}>
+                <Pressable style={styles.closeButton} onPress={closeModal}>
+                  <Text style={styles.closeButtonText}>✖</Text>
+                </Pressable>
+                <LinearGradient colors={['#7A9F59', '#4C7D2D']} style={styles.modalHeader}>
+                  <Icon name="check-circle" size={40} color="#fff" />
+                  <Text style={styles.successText}>SUCCESS</Text>
+                </LinearGradient>
+                <View style={styles.centeredTextContainer}>
+                  <Text style={styles.modalMessage}>Your account has been created!</Text>
+                  <Text style={styles.modalTips}>You can now log in and start using the app.</Text>
+                </View>
+                <Pressable style={styles.modalButton} onPress={handleContinue}>
+                  <Text style={styles.modalButtonText}>Continue</Text>
+                </Pressable>
+              </Animated.View>
+            </View>
+          </Modal>
+        </View>
+      </ImageBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#7A9F59',
+  },
   background: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
   container: {
     justifyContent: 'center',
     alignItems: 'center',
+    width: '85%',
   },
   logo: {
-    width: 150,
-    height: 150,
+    width: 140,
+    height: 140,
     marginBottom: 20,
   },
   title: {
-    fontSize: 40,
+    fontSize: 36,
+    fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 50,
+    marginBottom: 40,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
   },
   input: {
-    width: width * 0.8,
+    width: '100%',
     height: 50,
-    backgroundColor: 'transparent',
-    borderBottomWidth: 1,
-    borderBottomColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 12,
     color: '#fff',
-    marginBottom: 30,
-    fontSize: 18,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    marginBottom: 20,
+    borderBottomColor: '#ddd',
+    borderBottomWidth: 1,
   },
   signupButton: {
-    width: width * 0.8,
+    width: '100%',
     height: 50,
-    backgroundColor: '#fff',
+    marginBottom: 30,
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  buttonGradient: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
-    marginBottom: 30,
   },
   signupButtonText: {
     fontSize: 18,
-    color: '#7A9F59',
     fontWeight: 'bold',
+    color: '#fff',
   },
   loginContainer: {
     flexDirection: 'row',
+    marginTop: 10,
   },
   loginText: {
-    color: '#fff',
+    color: '#ddd',
     fontSize: 16,
   },
   loginLink: {
@@ -231,12 +273,10 @@ const styles = StyleSheet.create({
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3D6F3D',
-    width: '100%',
     borderRadius: 20,
     padding: 15,
+    width: '100%',
     justifyContent: 'center',
-    marginBottom: 20,
   },
   successText: {
     fontSize: 24,
