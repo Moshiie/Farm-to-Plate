@@ -13,7 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import CheckBox from 'react-native-check-box';
 import { LinearGradient } from 'expo-linear-gradient';
-import { supabase } from '../services/supabaseClient'; // Import Supabase client
+import { supabase } from '../services/supabaseClient'; 
 
 const { width } = Dimensions.get('window');
 
@@ -27,12 +27,13 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: email,
+        password: password,
       });
       
       if (error) {
         Alert.alert('Login failed', error.message);
+
       } else {
         Alert.alert('Login successful', 'You have been logged in!');
         navigation.navigate('Home'); // Navigate to Home after successful login
@@ -86,7 +87,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <TouchableOpacity style={styles.loginButton} onPress={() => handleLogin()}>
           <LinearGradient
             colors={['#7A9F59', '#4C7D2D']}
             style={styles.buttonGradient}

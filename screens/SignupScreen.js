@@ -32,8 +32,12 @@ export default function SignupScreen() {
   const navigation = useNavigation();
 
   const handleSignup = async () => {
+
     try {
-      const { error } = await supabase.auth.signUp({
+      const { 
+        data: { session }, 
+        error 
+      } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: fullname } },
@@ -53,6 +57,7 @@ export default function SignupScreen() {
       setEmail('');
       setPassword('');
     } catch (error) {
+
       Alert.alert('Signup Error', error.message);
     }
   };
@@ -102,14 +107,14 @@ export default function SignupScreen() {
             placeholder="Full Name"
             placeholderTextColor="#ddd"
             value={fullname}
-            onChangeText={setFullName}
+            onChangeText={(text) => setFullName(text)}
           />
           <TextInput
             style={styles.input}
             placeholder="Email"
             placeholderTextColor="#ddd"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => setEmail(text)}
           />
           <TextInput
             style={styles.input}
@@ -117,9 +122,9 @@ export default function SignupScreen() {
             placeholderTextColor="#ddd"
             secureTextEntry
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(text) => setPassword(text)}
           />
-          <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
+          <TouchableOpacity style={styles.signupButton} onPress={() => handleSignup()}>
             <LinearGradient
               colors={['#7A9F59', '#4C7D2D']}
               style={styles.buttonGradient}
