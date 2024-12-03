@@ -14,7 +14,6 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { supabase } from '../services/supabaseClient';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,14 +32,7 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullname } },
-      });
-
-      if (error) throw error;
-
+      
       setModalVisible(true);
       Animated.timing(modalAnimation, {
         toValue: 1,
