@@ -18,7 +18,9 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "jsEngine": "hermes",
+      "newArchEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"

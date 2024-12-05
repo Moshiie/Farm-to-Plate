@@ -10,18 +10,24 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import CheckBox from 'react-native-check-box';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const navigation = useNavigation();
+  const handleLogin = () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password.');
+      return;
+    }
+
+    navigation.navigate('Home'); // Navigate to HomeScreen
+  };
 
   return (
     <ImageBackground
@@ -42,6 +48,8 @@ export default function LoginScreen() {
           placeholderTextColor="#ddd"
           value={email}
           onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
         <TextInput
           style={styles.input}
@@ -67,7 +75,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
           <LinearGradient
             colors={['#7A9F59', '#4C7D2D']}
             style={styles.buttonGradient}
