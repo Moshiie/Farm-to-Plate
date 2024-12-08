@@ -8,6 +8,9 @@ import SignupScreen from '../screens/SignupScreen';
 import HomeScreen from '../screens/HomeScreen';
 import FavouritesScreen from '../screens/FavouritesScreen';
 import CartScreen from '../screens/CartScreen';
+import ChatScreen from '../screens/ChatScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import ShopScreen from '../screens/ShopScreen';
 
 const Stack = createStackNavigator();
 
@@ -27,6 +30,9 @@ export default function AppNavigator() {
       <Stack.Screen name="Home" component={HomeScreen} /> 
       <Stack.Screen name="Favourites" component={FavouritesScreen} /> 
       <Stack.Screen name="Cart" component={CartScreen} /> 
+      <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="Shop" component={ShopScreen} />
     </Stack.Navigator>
   );
 }

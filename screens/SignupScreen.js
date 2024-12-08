@@ -40,7 +40,6 @@ export default function SignupScreen() {
       } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullname } },
       });
 
       if (error) throw error;
