@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { supabase } from '../services/supabaseClient';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
@@ -34,8 +35,11 @@ const ProfileScreen = () => {
       <LinearGradient
         colors={['#4CAF50', '#66BB6A']}
         style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
         <Text style={styles.title}>Account</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => console.log('this is settings button')}> 
           <Icon name="gear" size={24} color="#fff" />
         </TouchableOpacity>
       </LinearGradient>
@@ -64,7 +68,7 @@ const ProfileScreen = () => {
             <Icon name="list-alt" size={30} color="#4CAF50" />
             <Text style={styles.actionText}>Orders</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity onPress={() => navigation.navigate('Favourites')}style={styles.actionButton}>
             <Icon name="heart" size={30} color="#4CAF50" />
             <Text style={styles.actionText}>Favourites</Text>
         </TouchableOpacity>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Import the local image
 import basketIcon from '../images/cart.png'; // Adjust the path based on your project structure
@@ -10,7 +11,7 @@ const CartScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.closeButton}>✕</Text>
+          <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.title}>Cart</Text>
       </View>
@@ -37,9 +38,10 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
     padding: 20,
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
     borderBottomColor: '#ddd',
   },
   closeButton: {
@@ -52,6 +54,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'center',
+    alignSelf: 'center',
   },
   content: {
     flex: 1,

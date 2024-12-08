@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,42 +10,158 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { supabase } from '../services/supabaseClient'; 
 
 const screenWidth = Dimensions.get('window').width;
 const cardWidth = screenWidth / 2 - 20;
 
 export default function HomeScreen({ navigation }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [products, setProducts] = useState([
-    { id: '1', name: 'Tomato', price: '₱ 20.00', sold: '10 sold', isFavourite: false },
-    { id: '2', name: 'Cucumber', price: '₱ 15.00', sold: '5 sold', isFavourite: false },
-    { id: '3', name: 'Lettuce', price: '₱ 25.00', sold: '8 sold', isFavourite: false },
-  ]);
 
-  const shops = [
-    { id: '1', name: 'Fresh Farm', location: 'Rosario St.' },
-    { id: '2', name: 'Veggie Delight', location: 'Corrales Ave.' },
-    { id: '3', name: 'Fruit Basket', location: 'Carmen Market' },
-    { id: '4', name: 'Green Shop', location: 'Limketkai Center' },
-  ];
+  const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState([]);
+  const [stores, setStores] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch products
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('product_id, product_name, price, stock_quantity, store_id')
+          .limit(10); // You can adjust the limit based on your needs
+
+        if (productsError) throw new Error(productsError.message);
+
+        // Fetch stores
+        const { data: storesData, error: storesError } = await supabase
+          .from('stores')
+          .select('store_id, store_name, store_description')
+          .limit(10); // You can adjust the limit based on your needs
+
+        if (storesError) throw new Error(storesError.message);
+
+        setProducts(productsData);
+        setStores(storesData);
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+
+      } finally {
+        setLoading(false); // Data fetching complete
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    product.product_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const toggleFavourite = (product) => {
-    setProducts((prevProducts) =>
-      prevProducts.map((item) =>
-        item.id === product.id ? { ...item, isFavourite: !item.isFavourite } : item
-      )
-    );
+  const toggleFavourite = async (product) => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error('No user found:', userError?.message || 'User is undefined');
+      return;
+    }
+    
+    if (user) {
+      try {
+        // Step 1: Fetch account_id from the accounts table using user_id
+        const { data: accountData, error: accountError } = await supabase
+          .from('accounts')
+          .select('account_id')
+          .eq('user_id', user.id)
+          .single(); // Get the account_id associated with the logged-in user
+  
+        if (accountError) {
+          console.error('Error fetching account_id:', accountError.message);
+          return;
+        }
+  
+        const account_id = accountData.account_id;
+  
+        // Check if the product is already in the favorites table
+        const { data: favoriteData, error: favoriteError } = await supabase
+          .from('favorites')
+          .select('favorite_id')
+          .eq('account_id', account_id)
+          .eq('product_id', product.product_id)
+          .limit(1); // Fetch the existing favorite (if any)
+
+        if (favoriteError) {
+          console.error('Error fetching favorite:', favoriteError.message);
+          return;
+        }
+
+        // If favoriteData is null, it means the product is not favorited, so we insert it
+        if (!favoriteData || favoriteData.length === 0) {
+          // Insert into the favorites table
+          const { data, error } = await supabase
+            .from('favorites')
+            .upsert([
+              {
+                account_id: account_id,
+                product_id: product.product_id,
+              },
+            ]);
+
+          if (error) {
+            console.error('Error adding to favorites:', error.message);
+          } else {
+            // Successfully added to favorites, update the state
+            setProducts((prevProducts) =>
+              prevProducts.map((item) =>
+                item.product_id === product.product_id
+                  ? { ...item, isFavourite: true }
+                  : item
+              )
+            );
+          }
+          
+        } else {
+          // If the product is already favorited, delete it from favorites
+          if (favoriteData[0]?.favorite_id) {
+            const { error: deleteError } = await supabase
+              .from('favorites')
+              .delete()
+              .eq('favorite_id', favoriteData[0].favorite_id); // Ensure favorite_id is present
+
+            if (deleteError) {
+              console.error('Error deleting from favorites:', deleteError.message);
+            } else {
+              // Successfully deleted, update the state
+              setProducts((prevProducts) =>
+                prevProducts.map((item) =>
+                  item.product_id === product.product_id
+                    ? { ...item, isFavourite: false }
+                    : item
+                )
+              );
+            }
+          } else {
+            console.error('Favorite ID is missing. Cannot delete favorite.');
+          }
+        }
+      } catch (error) {
+        console.error('Error in toggleFavourite:', error.message);
+      }
+    } else {
+      console.log('No user logged in');
+    }
   };
 
   const renderProduct = ({ item }) => (
-    <View style={styles.productCard}>
+    <TouchableOpacity
+      style={styles.productCard}
+      onPress={() => console.log('Proceed to Product Details')}
+    >
       <TouchableOpacity
         style={styles.favouriteIcon}
         onPress={() => toggleFavourite(item)}
@@ -59,20 +175,23 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.imagePlaceholder}>
         <Ionicons name="image-outline" size={50} color="#555" />
       </View>
-      <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.productPrice}>{item.price}</Text>
-      <Text style={styles.productSold}>{item.sold}</Text>
-    </View>
+      <Text style={styles.productName}>{item.product_name}</Text>
+      <Text style={styles.productPrice}>{`₱ ${item.price}`}</Text>
+      <Text style={styles.productStock}>{`${item.stock_quantity} in stock`}</Text>
+      </TouchableOpacity>
   );
 
   const renderShop = ({ item }) => (
-    <View style={styles.shopCard}>
+    <TouchableOpacity 
+      style={styles.shopCard}
+      onPress={() => console.log('Proceed to Store Details')}
+    >
       <Ionicons name="storefront-outline" size={40} color="#555" style={styles.shopIcon} />
       <View style={styles.shopDetails}>
-        <Text style={styles.shopName}>{item.name}</Text>
-        <Text style={styles.shopLocation}>{item.location}</Text>
+        <Text style={styles.shopName}>{item.store_name}</Text>
+        <Text style={styles.shopLocation}>{item.store_description}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -110,28 +229,34 @@ export default function HomeScreen({ navigation }) {
           />
         </View>
 
-        {/* Content Scrollable View */}
-        <ScrollView contentContainerStyle={styles.contentContainer}>
-          {/* Recommended Products */}
-          <Text style={styles.sectionTitle}>Recommended Products</Text>
-          <FlatList
-            data={filteredProducts}
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            contentContainerStyle={styles.productList}
-          />
+        {/* Content */}
+        {loading ? (
+          <ActivityIndicator size="large" color="#7A9F59" style={styles.loader} />
+        ) : (
+          <View style={styles.contentContainer}>
+            {/* Recommended Products */}
+            <Text style={styles.sectionTitle}>Recommended Products</Text>
+            <FlatList
+              data={filteredProducts}
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.product_id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.productList}
+            />
 
-          {/* Recommended Shops */}
-          <Text style={styles.sectionTitle}>Recommended Shops</Text>
-          <FlatList
-            data={shops}
-            renderItem={renderShop}
-            keyExtractor={(item) => item.id}
-            horizontal
-            contentContainerStyle={styles.shopList}
-          />
-        </ScrollView>
+            {/* Recommended Shops */}
+            <Text style={styles.sectionTitle}>Recommended Shops</Text>
+            <FlatList
+              data={stores}
+              renderItem={renderShop}
+              keyExtractor={(item) => item.store_id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.shopList}
+            />
+          </View>
+        )}
 
         {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
@@ -210,6 +335,11 @@ const styles = StyleSheet.create({
     height: 40,
     color: '#333',
   },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -256,7 +386,7 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 5,
   },
-  productSold: {
+  productStock: {
     fontSize: 10,
     color: '#888',
   },
