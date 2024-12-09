@@ -21,14 +21,14 @@ const navigation = useNavigation(); // Hook to access navigation
         style={styles.header}>
         <Text style={styles.title}>Account</Text>
         <TouchableOpacity>
-          <Icon name="gear" size={24} color="#fff" />
+          <Icon name="gear" size={24} color="black" />
         </TouchableOpacity>
       </LinearGradient>
 
       {/* Profile Section */}
         <View style={styles.profileSection}>
         <Text style={styles.userName}>Juan Dela Cruz</Text>
-        <TouchableOpacity style={styles.editProfileButton}>
+        <TouchableOpacity style={styles.editProfileButton} onPress={() => navigation.navigate('InfoPro')}>
             <Icon name="edit" size={16} color="#4CAF50" style={styles.actionIcon} />
             <Text style={styles.editProfile}>Edit Profile</Text>
         </TouchableOpacity>
@@ -200,7 +200,7 @@ shopButtonText: {
     color: '#333',
   },
   logoutButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#09320a',
     padding: 15,
     margin: 20,
     borderRadius: 10,
