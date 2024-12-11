@@ -25,6 +25,8 @@ export default function HomeScreen({ navigation }) {
     { id: '3', name: 'Lettuce', price: '₱ 25.00', sold: '8 sold', isFavourite: false },
   ]);
 
+  const [favourites, setFavourites] = useState([]);
+
   const shops = [
     { id: '1', name: 'Fresh Farm', location: 'Rosario St.' },
     { id: '2', name: 'Veggie Delight', location: 'Corrales Ave.' },
@@ -32,17 +34,26 @@ export default function HomeScreen({ navigation }) {
     { id: '4', name: 'Green Shop', location: 'Limketkai Center' },
   ];
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const toggleFavourite = (product) => {
     setProducts((prevProducts) =>
       prevProducts.map((item) =>
         item.id === product.id ? { ...item, isFavourite: !item.isFavourite } : item
       )
     );
+    setFavourites((prevFavourites) => {
+      if (product.isFavourite) {
+        // Remove from favourites
+        return prevFavourites.filter((item) => item.id !== product.id);
+      } else {
+        // Add to favourites
+        return [...prevFavourites, product];
+      }
+    });
   };
+
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const renderProduct = ({ item }) => (
     <View style={styles.productCard}>
@@ -89,7 +100,7 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
           <View style={styles.topIcons}>
-            <TouchableOpacity onPress={() => navigation.navigate('Favourites')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Favourites', { favourites })}>
               <Ionicons name="heart-outline" size={24} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Cart')}>
