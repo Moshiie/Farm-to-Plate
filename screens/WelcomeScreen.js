@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function WelcomeScreen({ navigation }) {
+
   useEffect(() => {
-    
     const timer = setTimeout(() => {
       navigation.navigate('Location');
     }, 2000);

@@ -54,7 +54,8 @@ export default function LocationScreen({ navigation }) {
         console.log('User location:', location);
 
         // Navigate to the next screen
-        navigation.replace('Banner'); // Replace 'Banner' with your target screen
+        navigation.replace('Banner');
+        
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch location. Please try again later.');
         console.error('Error fetching location:', error);

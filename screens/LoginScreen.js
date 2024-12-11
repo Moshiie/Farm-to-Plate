@@ -10,6 +10,8 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 import CheckBox from 'react-native-check-box';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -20,13 +22,27 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password.');
-      return;
-    }
+  const handleLogin = async () => {
+    try {
 
-    navigation.navigate('Home'); // Navigate to HomeScreen
+      if (!email) {
+        Alert.alert('Invalid Input', 'Please enter email.');
+        return;
+      }
+
+      if (!password) {
+        Alert.alert('Invalid Input', 'Please enter password.');
+        return;
+      }
+
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('User signed in:', userCredential.user.email);
+
+  } catch (error) {
+    Alert.alert('Login Error', error.message);
+    setEmail("");
+    setPassword("");
+  }
   };
 
   return (

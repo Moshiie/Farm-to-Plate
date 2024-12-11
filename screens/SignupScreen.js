@@ -14,6 +14,8 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,17 +23,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-export default function SignupScreen() {
+export default function SignupScreen({ navigation }) {
   const [fullname, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [modalAnimation] = useState(new Animated.Value(0));
 
-  const navigation = useNavigation();
-
   const handleSignup = async () => {
     try {
+
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      console.log('User signed up:', user.uid);
       
       setModalVisible(true);
       Animated.timing(modalAnimation, {
@@ -41,9 +46,12 @@ export default function SignupScreen() {
         useNativeDriver: true,
       }).start();
 
+
+      // Clear inputs after successful signup
       setFullName('');
       setEmail('');
       setPassword('');
+      
     } catch (error) {
       Alert.alert('Signup Error', error.message);
     }

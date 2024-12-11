@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,25 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
+import { AuthContext } from "../providers/AuthProvider";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
 
-const ProfileScreen = () => {
-const navigation = useNavigation(); // Hook to access navigation
+const ProfileScreen = ({ navigation }) => {
+
+  const { setIsFirstLaunch } = useContext(AuthContext);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setIsFirstLaunch(false);
+      
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -86,9 +99,11 @@ const navigation = useNavigation(); // Hook to access navigation
             </TouchableOpacity>
         </ScrollView>
 
-
       {/* Log Out Button */}
-      <TouchableOpacity style={styles.logoutButton}>
+      <TouchableOpacity 
+        onPress={handleLogout}
+        style={styles.logoutButton}
+      >
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
     </View>

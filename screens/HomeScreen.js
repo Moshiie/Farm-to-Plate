@@ -111,7 +111,7 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Content Scrollable View */}
-        <ScrollView contentContainerStyle={styles.contentContainer}>
+        <View contentContainerStyle={styles.contentContainer}>
           {/* Recommended Products */}
           <Text style={styles.sectionTitle}>Recommended Products</Text>
           <FlatList
@@ -129,9 +129,10 @@ export default function HomeScreen({ navigation }) {
             renderItem={renderShop}
             keyExtractor={(item) => item.id}
             horizontal
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.shopList}
           />
-        </ScrollView>
+        </View>
 
         {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
