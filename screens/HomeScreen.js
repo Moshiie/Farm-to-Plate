@@ -9,7 +9,6 @@ import {
   Dimensions,
   SafeAreaView,
   StatusBar,
-  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -35,20 +34,16 @@ export default function HomeScreen({ navigation }) {
   ];
 
   const toggleFavourite = (product) => {
-    setProducts((prevProducts) =>
-      prevProducts.map((item) =>
-        item.id === product.id ? { ...item, isFavourite: !item.isFavourite } : item
-      )
+    const updatedProducts = products.map((item) =>
+      item.id === product.id ? { ...item, isFavourite: !item.isFavourite } : item
     );
-    setFavourites((prevFavourites) => {
-      if (product.isFavourite) {
-        // Remove from favourites
-        return prevFavourites.filter((item) => item.id !== product.id);
-      } else {
-        // Add to favourites
-        return [...prevFavourites, product];
-      }
-    });
+    setProducts(updatedProducts);
+
+    if (product.isFavourite) {
+      setFavourites((prev) => prev.filter((fav) => fav.id !== product.id));
+    } else {
+      setFavourites((prev) => [...prev, product]);
+    }
   };
 
   const filteredProducts = products.filter((product) =>
@@ -57,10 +52,7 @@ export default function HomeScreen({ navigation }) {
 
   const renderProduct = ({ item }) => (
     <View style={styles.productCard}>
-      <TouchableOpacity
-        style={styles.favouriteIcon}
-        onPress={() => toggleFavourite(item)}
-      >
+      <TouchableOpacity style={styles.favouriteIcon} onPress={() => toggleFavourite(item)}>
         <Ionicons
           name={item.isFavourite ? 'heart' : 'heart-outline'}
           size={24}
@@ -109,40 +101,41 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchBarContainer}>
-          <Ionicons name="search-outline" size={20} color="#888" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search for products or shops..."
-            placeholderTextColor="#888"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-
-        {/* Content Scrollable View */}
-        <ScrollView contentContainerStyle={styles.contentContainer}>
-          {/* Recommended Products */}
-          <Text style={styles.sectionTitle}>Recommended Products</Text>
-          <FlatList
-            data={filteredProducts}
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            contentContainerStyle={styles.productList}
-          />
-
-          {/* Recommended Shops */}
-          <Text style={styles.sectionTitle}>Recommended Shops</Text>
-          <FlatList
-            data={shops}
-            renderItem={renderShop}
-            keyExtractor={(item) => item.id}
-            horizontal
-            contentContainerStyle={styles.shopList}
-          />
-        </ScrollView>
+        {/* Main FlatList */}
+        <FlatList
+          ListHeaderComponent={() => (
+            <>
+              <View style={styles.searchBarContainer}>
+                <Ionicons name="search-outline" size={20} color="#888" style={styles.searchIcon} />
+                <TextInput
+                  style={styles.searchBar}
+                  placeholder="Search for products or shops..."
+                  placeholderTextColor="#888"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
+              <Text style={styles.sectionTitle}>Recommended Products</Text>
+            </>
+          )}
+          data={filteredProducts}
+          renderItem={renderProduct}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.productList}
+          ListFooterComponent={() => (
+            <>
+              <Text style={styles.sectionTitle}>Recommended Shops</Text>
+              <FlatList
+                data={shops}
+                renderItem={renderShop}
+                keyExtractor={(item) => item.id}
+                horizontal
+                contentContainerStyle={styles.shopList}
+              />
+            </>
+          )}
+        />
 
         {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
@@ -160,6 +153,7 @@ export default function HomeScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   safeArea: {

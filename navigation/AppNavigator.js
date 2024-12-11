@@ -20,6 +20,10 @@ import ShopDashboardScreen from '../screens/ShopDashboardScreen';
 import SellerRegistrationSuccessScreen from '../screens/SellerRegistrationSuccessScreen';
 import AddProductScreen from '../screens/AddProductScreen';
 import ProductListScreen from '../screens/ProductListScreen';
+import ProScreen from '../screens/ProScreen';
+import SelectProScreen from '../screens/SelectProScreen';
+import HelpCenterScreen from '../screens/HelpCenterScreen';
+import TermsAndPoliciesScreen from '../screens/TermsAndPoliciesScreen';
 import OrderListScreen from '../screens/OrderListScreen';
 import AddressScreen from '../screens/AddressScreen';
 import UpdateShopProfileScreen from '../screens/UpdateShopProfileScreen';
@@ -29,26 +33,46 @@ const Stack = createStackNavigator();
 export default function AppNavigator() {
   return (
     <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
+      {/* Authentication Screens */}
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="Location" component={LocationScreen} />
       <Stack.Screen name="Banner" component={BannerScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Signup" component={SignupScreen} />
+
+      {/* Main App Screens */}
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Favourites" component={FavouritesScreen} />
       <Stack.Screen name="Cart" component={CartScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+
+      {/* Help Center */}
+      <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
+
+      {/* Terms and Policies */}
+      <Stack.Screen name="TermsAndPolicies" component={TermsAndPoliciesScreen} />
+
+      {/* Shop Screens */}
       <Stack.Screen name="Shop" component={ShopScreen} />
-      <Stack.Screen name="InfoPro" component={InfomationProfile} />
+      <Stack.Screen name="ShopDashboard" component={ShopDashboardScreen} />
+      <Stack.Screen name="AddProduct" component={AddProductScreen} />
+      <Stack.Screen name="ProductList" component={ProductListScreen} />
+      <Stack.Screen name="OrderList" component={OrderListScreen} />
+      <Stack.Screen name="AddressShop" component={AddressScreen} />
+      <Stack.Screen name="UpdateShopProf" component={UpdateShopProfileScreen} />
+
+      {/* Seller Onboarding Screens */}
+      <Stack.Screen name="InfoProfile" component={InfomationProfile} />
       <Stack.Screen name="BusinessInfo" component={BusinessInformationScreen} />
-      <Stack.Screen name="SetUp" component={SetUpShopScreen} />
+      <Stack.Screen name="SetUpShop" component={SetUpShopScreen} />
       <Stack.Screen name="ShopInfo" component={ShopInformationScreen} />
-      <Stack.Screen name="VerNum" component={VerificationNumScreen} />
-      <Stack.Screen name='ShopDash' component={ShopDashboardScreen} />
-      <Stack.Screen name='SelRegSuc' component={SellerRegistrationSuccessScreen} />
-      <Stack.Screen name='AddProdt' component={AddProductScreen} />
-      <Stack.Screen name='ProductList' component={ProductListScreen} />
+      <Stack.Screen name="VerificationNumber" component={VerificationNumScreen} />
+      <Stack.Screen name="RegistrationSuccess" component={SellerRegistrationSuccessScreen} />
+
+      {/* Pro Membership Screens */}
+      <Stack.Screen name="Pro" component={ProScreen} />
+      <Stack.Screen name="SelectPro" component={SelectProScreen} />
       <Stack.Screen name='OrderList' component={OrderListScreen} />
       <Stack.Screen name='AddressShop' component={AddressScreen} />
       <Stack.Screen name='UpdateShopProf' component={UpdateShopProfileScreen} />
