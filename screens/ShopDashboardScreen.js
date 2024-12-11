@@ -2,13 +2,13 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ImageBackground, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-const ShopDashboardScreen = () => {
+const ShopDashboardScreen = ({navigation}) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
         <Text style={styles.shopName}>Shop Name</Text>
-        <TouchableOpacity onPress={() => console.log('Profile Icon Pressed')}>
+        <TouchableOpacity onPress={() => navigation.navigate('UpdateShopProf')}>
             <MaterialIcons name="account-circle" size={28} color="#FFF" />
         </TouchableOpacity>
       </View>
@@ -18,7 +18,7 @@ const ShopDashboardScreen = () => {
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddProdt')}>
           <Text style={styles.addButtonText}>+ Add product</Text>
         </TouchableOpacity>
       </ImageBackground>
@@ -30,12 +30,12 @@ const ShopDashboardScreen = () => {
           <Text style={styles.featureButtonText}>Products</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.featureButton}>
+        <TouchableOpacity style={styles.featureButton} onPress={() => navigation.navigate('OrderList')} >
           <MaterialIcons name="local-shipping" size={24} color="#2E4C2D" />
           <Text style={styles.featureButtonText}>Orders</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.featureButton}>
+        <TouchableOpacity style={styles.featureButton} onPress={() => navigation.navigate('AddressShop')}>
           <MaterialIcons name="location-on" size={24} color="#2E4C2D" />
           <Text style={styles.featureButtonText}>Addresses</Text>
         </TouchableOpacity>

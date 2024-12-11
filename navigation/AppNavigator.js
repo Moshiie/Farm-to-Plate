@@ -20,6 +20,9 @@ import ShopDashboardScreen from '../screens/ShopDashboardScreen';
 import SellerRegistrationSuccessScreen from '../screens/SellerRegistrationSuccessScreen';
 import AddProductScreen from '../screens/AddProductScreen';
 import ProductListScreen from '../screens/ProductListScreen';
+import OrderListScreen from '../screens/OrderListScreen';
+import AddressScreen from '../screens/AddressScreen';
+import UpdateShopProfileScreen from '../screens/UpdateShopProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -46,6 +49,9 @@ export default function AppNavigator() {
       <Stack.Screen name='SelRegSuc' component={SellerRegistrationSuccessScreen} />
       <Stack.Screen name='AddProdt' component={AddProductScreen} />
       <Stack.Screen name='ProductList' component={ProductListScreen} />
+      <Stack.Screen name='OrderList' component={OrderListScreen} />
+      <Stack.Screen name='AddressShop' component={AddressScreen} />
+      <Stack.Screen name='UpdateShopProf' component={UpdateShopProfileScreen} />
     </Stack.Navigator>
   );
 }

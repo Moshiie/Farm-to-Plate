@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     alignItems: 'center',
+    marginTop: 25,
     marginBottom: 20,
   },
   imageUploadButton: {

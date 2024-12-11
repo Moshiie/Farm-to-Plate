@@ -1,61 +1,77 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const ProductListScreen = ({ navigation }) => { // Access navigation prop
+const ProductListScreen = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => navigation.navigate('AddProdt')} // Navigate to 'AddProdt' screen
+      {/* Header Section with Background Image */}
+      <ImageBackground
+        source={require('../images/veg.jpg')} // Replace with the actual background URL
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
-        <Ionicons name="arrow-back" size={30} color="#2E4C2D" />
-      </TouchableOpacity>
-
-      {/* Logo and Shop Header */}
-      <View style={styles.header}>
-        <Image source={{ uri: 'https://via.placeholder.com/50' }} style={styles.logo} />
-        <View style={styles.shopInfo}>
-            <TouchableOpacity onPress={() => navigation.navigate('ShopDash')}>
-            <Text style={styles.shopName}>Shop Name</Text>
-            </TouchableOpacity>
-            <Text style={styles.shopRating}>⭐ 4.8</Text>
+        {/* Search Bar */}
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search Product"
+            placeholderTextColor="#888"
+          />
         </View>
+
+        {/* Shop Header */}
+        <View style={styles.shopHeader}>
+          <Image
+            source={{ uri: 'https://via.placeholder.com/60' }} // Replace with the actual logo URL
+            style={styles.shopLogo}
+          />
+          <View style={styles.shopInfo}>
+            <TouchableOpacity onPress={() => navigation.navigate('ShopDash')}>
+              <Text style={styles.shopName}>Shop Name</Text>
+            </TouchableOpacity>
+            <Text style={styles.shopRating}>⭐ 4.9</Text>
+          </View>
+        </View>
+      </ImageBackground>
+
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <TouchableOpacity style={[styles.tabButton, styles.activeTab]}>
+            <Text style={styles.tabTextActive}>All Products</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tabButton}>
+            <Text style={styles.tabText}>Category 1</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tabButton}>
+            <Text style={styles.tabText}>Category 2</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tabButton}>
+            <Text style={styles.tabText}>Category 3</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tabButton}>
+            <Text style={styles.tabText}>Sold Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
 
-      {/* Search Bar */}
-      <TextInput style={styles.searchInput} placeholder="Search Product" />
+      {/* Product Count */}
+      <View style={styles.productCountContainer}>
+        <Text style={styles.productCountText}>100 Products</Text>
+      </View>
 
-      {/* Category Tabs - Horizontal ScrollView */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabContainer}>
-        <TouchableOpacity style={styles.tabButton}>
-          <Text style={styles.tabText}>All Products</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabButton}>
-          <Text style={styles.tabText}>Category 1</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabButton}>
-          <Text style={styles.tabText}>Category 2</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabButton}>
-          <Text style={styles.tabText}>Category 3</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabButton}>
-          <Text style={styles.tabText}>Sold Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      {/* Product Cards */}
+      {/* Product Grid */}
       <View style={styles.productGrid}>
         {[...Array(4)].map((_, index) => (
           <View style={styles.productCard} key={index}>
             <Image source={{ uri: 'https://via.placeholder.com/100' }} style={styles.productImage} />
             <Text style={styles.productName}>Product Name</Text>
             <Text style={styles.productInfo}>5 pieces left</Text>
-            <Text style={styles.productPrice}>₱100.00</Text>
+            <Text style={styles.productPrice}>₱0.00</Text>
             <TouchableOpacity style={styles.moreButton}>
-              <Ionicons name="ellipsis-horizontal" size={24} color="#2E4C2D" />
+              <Ionicons name="ellipsis-horizontal" size={20} color="#2E4C2D" />
             </TouchableOpacity>
           </View>
         ))}
@@ -66,75 +82,113 @@ const ProductListScreen = ({ navigation }) => { // Access navigation prop
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
+    backgroundColor: '#F5F5F5',
   },
-  backButton: {
-    marginTop: 30,
-    marginBottom: 20,
+  backgroundImage: {
+    width: '100%',
+    height: 200, // Adjust height for a better visual
+    justifyContent: 'flex-start', // Align content at the top of the image
+    alignItems: 'center', // Center content horizontally
+    paddingTop: 40, // Padding to prevent content from touching the top
+    paddingBottom: 20, // Padding for spacing
   },
-  header: {
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingLeft: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Slightly transparent background for search bar
+    borderRadius: 25, // Rounded corners
+    width: '90%',
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
-  logo: {
-    width: 50,
-    height: 50,
+  searchIcon: {
+    marginRight: 10, // Space between icon and text input
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  shopHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10, // Reduced to avoid overlap
+  },
+  shopLogo: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     marginRight: 10,
   },
   shopInfo: {
-    flexDirection: 'column',
+    flex: 1,
     justifyContent: 'center',
   },
   shopName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#fff',
   },
   shopRating: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#FFD700',
   },
-  searchInput: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#CCC',
-    borderRadius: 5,
-    paddingLeft: 10,
-    marginBottom: 20,
-    backgroundColor: '#F9F9F9',
-  },
   tabContainer: {
-    marginBottom: 20,
-    marginLeft: 10,
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#DDD',
+    flexDirection: 'row',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   tabButton: {
-    paddingHorizontal: 10,
-    marginRight: 15,
+    paddingHorizontal: 15,
+    marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#2E4C2D',
+  },
   tabText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: '#888',
+    fontSize: 14,
+  },
+  tabTextActive: {
     color: '#2E4C2D',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  productCountContainer: {
+    alignItems: 'flex-end',
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  productCountText: {
+    fontSize: 12,
+    color: '#333',
   },
   productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    padding: 10,
+    backgroundColor: '#EAF4E7',
   },
   productCard: {
     width: '48%',
-    marginBottom: 20,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#FFF',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#CCC',
+    borderColor: '#DDD',
     padding: 10,
-    alignItems: 'center',
+    marginBottom: 10,
   },
   productImage: {
     width: '100%',
@@ -144,11 +198,11 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 5,
+    color: '#333',
   },
   productInfo: {
     fontSize: 12,
-    color: 'gray',
+    color: '#777',
     marginBottom: 5,
   },
   productPrice: {
@@ -158,9 +212,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   moreButton: {
-    backgroundColor: '#F0F8F5',
-    borderRadius: 20,
-    padding: 5,
+    alignSelf: 'flex-end',
   },
 });
 
