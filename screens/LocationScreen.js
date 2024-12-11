@@ -8,6 +8,7 @@ import {
   Animated,
   ActivityIndicator,
   Alert,
+  Text,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
@@ -37,13 +38,19 @@ export default function LocationScreen({ navigation }) {
   useEffect(() => {
     const requestLocationAccess = async () => {
       try {
+        setIsLoading(true);
+
+        // Request location permission
         const { status } = await Location.requestForegroundPermissionsAsync();
 
         if (status !== 'granted') {
           Alert.alert(
             'Permission Denied',
             'Location permission is required to use this feature. Please enable it in your device settings.',
-            [{ text: 'OK', onPress: () => navigation.goBack() }]
+            [
+              { text: 'Retry', onPress: requestLocationAccess },
+              { text: 'Cancel', onPress: () => navigation.goBack() },
+            ]
           );
           setIsLoading(false);
           return;
@@ -53,7 +60,7 @@ export default function LocationScreen({ navigation }) {
         const location = await Location.getCurrentPositionAsync({});
         console.log('User location:', location);
 
-        // Navigate to the next screen
+        // Navigate to the next screen after successfully fetching location
         navigation.replace('Banner'); // Replace 'Banner' with your target screen
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch location. Please try again later.');
@@ -93,9 +100,7 @@ export default function LocationScreen({ navigation }) {
                 </Animated.Text>
               </>
             ) : (
-              <Animated.Text style={[styles.text, { opacity: fadeAnim }]}>
-                Waiting for User Action...
-              </Animated.Text>
+              <Text style={styles.text}>Location Access Complete</Text>
             )}
           </View>
         </LinearGradient>
