@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
@@ -39,12 +40,13 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#4CAF50', '#66BB6A']} style={styles.header}>
-        <Text style={styles.title}>Account</Text>
-        <TouchableOpacity>
-          <Icon name="gear" size={24} color="#fff" />
-        </TouchableOpacity>
-      </LinearGradient>
+      <LinearGradient colors={['#2E4C2D', '#2E4C2D']} style={styles.header}>
+  <Text style={styles.title}>Account</Text>
+  <TouchableOpacity style={styles.gearButton}>
+    <Icon name="gear" size={24} color="#fff" />
+  </TouchableOpacity>
+</LinearGradient>
+
 
       {/* Profile Section */}
       <View style={styles.profileSection}>
@@ -64,24 +66,28 @@ const ProfileScreen = () => {
 
       {/* Action Buttons */}
       <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Orders')}>
-          <Icon name="list-alt" size={30} color="#4CAF50" />
-          <Text style={styles.actionText}>Orders</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+  style={styles.actionButton}
+  onPress={() => navigation.navigate('OrderList')} // Correct screen name
+>
+  <Icon name="list-alt" size={30} color='#2E4C2D' />
+  <Text style={styles.actionText}>Orders</Text>
+</TouchableOpacity>
+
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => navigation.navigate('Favourites')}
         >
-          <Icon name="heart" size={30} color="#4CAF50" />
+          <Icon name="heart" size={30} color='#2E4C2D' />
           <Text style={styles.actionText}>Favourites</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('Addresses')}
-        >
-          <Icon name="address-book" size={30} color="#4CAF50" />
-          <Text style={styles.actionText}>Addresses</Text>
-        </TouchableOpacity>
+  style={styles.actionButton}
+  onPress={() => navigation.navigate('AddressShop')} // Use the correct screen name
+>
+  <Icon name="address-book" size={30} color='#2E4C2D' />
+  <Text style={styles.actionText}>Addresses</Text>
+</TouchableOpacity>
       </View>
 
       {/* Additional Sections */}
@@ -91,11 +97,12 @@ const ProfileScreen = () => {
   onPress={() => navigation.navigate('Pro')} // Navigates to ProScreen
 >
   <View style={styles.listItemContent}>
-    <Icon name="star" size={20} color="#4CAF50" style={styles.listItemIcon} />
+    <FontAwesome5 name="crown" size={20} color="#FFD700" style={styles.listItemIcon} />
     <Text style={styles.listItemText}>Become a Pro</Text>
   </View>
   <Icon name="angle-right" size={20} color="#4CAF50" />
 </TouchableOpacity>
+
 <TouchableOpacity
   style={styles.listItem}
   onPress={() => navigation.navigate('HelpCenter')} // Navigates to HelpCenterScreen
@@ -104,7 +111,7 @@ const ProfileScreen = () => {
     <Icon
       name="question-circle"
       size={20}
-      color="#4CAF50"
+      color='#2E4C2D'
       style={styles.listItemIcon}
     />
     <Text style={styles.listItemText}>Help Center</Text>
@@ -117,7 +124,7 @@ const ProfileScreen = () => {
   onPress={() => navigation.navigate('TermsAndPolicies')}
 >
   <View style={styles.listItemContent}>
-    <Icon name="file-text" size={20} color="#4CAF50" style={styles.listItemIcon} />
+    <Icon name="file-text" size={20} color='#2E4C2D' style={styles.listItemIcon} />
     <Text style={styles.listItemText}>Terms & Policies</Text>
   </View>
   <Icon name="angle-right" size={20} color="#4CAF50" />
@@ -141,16 +148,22 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#C8D6C5',
   },
   header: {
     padding: 25,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     elevation: 5,
+    position: 'relative',
+  },
+  gearButton: {
+    position: 'absolute',
+    right: 20,
+    top: 25,
   },
   title: {
     color: '#fff',
@@ -188,7 +201,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2E4C2D',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 10,

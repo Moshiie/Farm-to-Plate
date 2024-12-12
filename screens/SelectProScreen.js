@@ -19,7 +19,7 @@ const CustomCheckbox = ({ value, onValueChange }) => (
   </TouchableOpacity>
 );
 
-const SelectProScreen = () => {
+const SelectProScreen = ({ navigation }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [autoRenew, setAutoRenew] = useState(false);
 
@@ -29,13 +29,14 @@ const SelectProScreen = () => {
       return;
     }
     Alert.alert('Success', `You have subscribed to the ${selectedPlan} plan.`);
+    navigation.navigate('ActivePro'); // Navigate to ActiveProScreen
   };
-
+  
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.headerContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="close" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Review your plan</Text>
@@ -121,7 +122,9 @@ const SelectProScreen = () => {
         <View style={styles.paymentCard}>
           <Icon name="credit-card" size={20} color="#4CAF50" />
           <Text style={styles.paymentText}>GCash (Alipay + Partner)</Text>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SelectPayment')} // Navigate to SelectPaymentScreen
+          >
             <Icon name="pencil" size={20} color="#4CAF50" />
           </TouchableOpacity>
         </View>

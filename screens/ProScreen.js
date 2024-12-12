@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { FontAwesome5 } from 'react-native-vector-icons'; // Import FontAwesome5 for crown
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { FontAwesome5 } from '@expo/vector-icons'; // Import FontAwesome5 for the crown
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
@@ -11,15 +11,13 @@ const ProScreen = () => {
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#FFBB00', '#FFD700']} style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.headerTitle}>PlatePro</Text>
-            <FontAwesome5 name="crown" size={20} color="#FFD700" style={styles.crownIcon} />
-          </View>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Icon name="close" size={24} color="#000" />
-          </TouchableOpacity>
+      <LinearGradient colors={['#2E4C2D', '#2E4C2D']} style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={20} color="white" />
+        </TouchableOpacity>
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerTitle}>PlatePro</Text>
+          <FontAwesome5 name="crown" size={20} color="#FFD700" style={styles.crownIcon} />
         </View>
       </LinearGradient>
 
@@ -112,38 +110,38 @@ const ProScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#C8D6C5',
   },
   header: {
-    paddingVertical: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    marginBottom: 20,
-  },
-  headerContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 20,
+    justifyContent: 'center',
+    backgroundColor: '#2E4C2D',
+    height: 60,
+    paddingHorizontal: 15,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 15,
+    padding: 5, 
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 21,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#FFFFFF',
+    marginRight: 5,
   },
   crownIcon: {
-    marginLeft: 8,
+    marginLeft: 5,
   },
   sectionContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
+    marginTop: 30, 
   },
   sectionTitle: {
     fontSize: 22,
@@ -199,21 +197,22 @@ const styles = StyleSheet.create({
   },
   selectPlanButton: {
     backgroundColor: '#FF5722',
-    paddingVertical: 15,
-    paddingHorizontal: 50,
+    paddingVertical: 5, // Reduced padding for thinner appearance
+    paddingHorizontal: 30,
     borderRadius: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
+    shadowRadius: 4,
+    elevation: 5,
   },
   selectPlanText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#fff',
     fontWeight: 'bold',
     textAlign: 'center',
   },
 });
+
 
 export default ProScreen;

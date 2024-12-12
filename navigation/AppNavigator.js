@@ -22,6 +22,8 @@ import AddProductScreen from '../screens/AddProductScreen';
 import ProductListScreen from '../screens/ProductListScreen';
 import ProScreen from '../screens/ProScreen';
 import SelectProScreen from '../screens/SelectProScreen';
+import SelectPaymentScreen from '../screens/SelectPaymentScreen';
+import ActiveProScreen from '../screens/ActiveProScreen';
 import HelpCenterScreen from '../screens/HelpCenterScreen';
 import TermsAndPoliciesScreen from '../screens/TermsAndPoliciesScreen';
 import OrderListScreen from '../screens/OrderListScreen';
@@ -73,9 +75,10 @@ export default function AppNavigator() {
       {/* Pro Membership Screens */}
       <Stack.Screen name="Pro" component={ProScreen} />
       <Stack.Screen name="SelectPro" component={SelectProScreen} />
-      <Stack.Screen name='OrderList' component={OrderListScreen} />
-      <Stack.Screen name='AddressShop' component={AddressScreen} />
-      <Stack.Screen name='UpdateShopProf' component={UpdateShopProfileScreen} />
+      <Stack.Screen name="ActivePro" component={ActiveProScreen} />
+
+      {/* Select Payment Screen */}
+      <Stack.Screen name="SelectPayment" component={SelectPaymentScreen} />
     </Stack.Navigator>
   );
 }

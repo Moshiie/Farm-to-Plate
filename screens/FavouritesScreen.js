@@ -75,7 +75,7 @@ export default function FavouritesScreen({ navigation, route }) {
           />
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons name="heart-outline" size={100} color="#4CAF50" style={styles.emptyIcon} />
+            <Ionicons name="heart-outline" size={100} color='#2E4C2D' style={styles.emptyIcon} />
             <Text style={styles.heading}>No favourites saved</Text>
             <Text style={styles.subText}>
               To make ordering even faster, you’ll find all your faves here. Just look for the heart icon!
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2E4C2D',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
