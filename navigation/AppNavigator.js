@@ -17,44 +17,93 @@ import FavouritesScreen from '../screens/FavouritesScreen';
 import CartScreen from '../screens/CartScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ShopScreen from '../screens/ShopScreen';
+import SetUpShopScreen from '../screens/SetUpShopScreen';
+import BusinessInformationScreen from '../screens/BusinessInformationScreen'; 
+import ShopInformationScreen from '../screens/ShopInformationScreen';
+import SellerRegistrationSuccessScreen from '../screens/SellerRegistrationSuccessScreen';
+import VerificationNumScreen from '../screens/VerificationNumScreen';
+import InformationProfile from '../screens/InformationProfile';
+import AddProductScreen from '../screens/AddProductScreen';
+import AddressScreen from '../screens/AddressScreen';
+import OrderListScreen from '../screens/OrderListScreen';
+import ProductListScreen from '../screens/ProductListScreen';
+import ShopDashboardScreen from '../screens/ShopDashboardScreen';
+import UpdateShopProfileScreen from '../screens/UpdateShopProfileScreen'; 
+import ProScreen from '../screens/ProScreen';
+import SelectProScreen from '../screens/SelectProScreen';
+import HelpCenterScreen from '../screens/HelpCenterScreen';
+import TermsAndPoliciesScreen from '../screens/TermsAndPoliciesScreen';
+import SelectPaymentScreen from '../screens/SelectPaymentScreen';
+import ActiveProScreen from '../screens/ActiveProScreen';
 
 //Loading Utility
 import Loading from "../screens/utils/Loading";
-
-const AuthStack = createStackNavigator();
-const Auth = ({ isFirstLaunch }) => {
-  return (
-    <AuthStack.Navigator
-      initialRouteName={isFirstLaunch ? "Welcome" : "Banner" } // Dynamically decide initial route
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
-      <MainStack.Screen name="Location" component={LocationScreen} />
-      <MainStack.Screen name="Banner" component={BannerScreen} />
-      <AuthStack.Screen name="Login" component={LoginScreen} />
-      <AuthStack.Screen name="Signup" component={SignupScreen} />
-    </AuthStack.Navigator>
-  );
-};
 
 const MainStack = createStackNavigator();
 const Main = () => {
   return (
     <MainStack.Navigator
-      initialRouteName='Home'
+      initialRouteName='Home' 
       screenOptions={{
         headerShown: false,
       }}
     >
+      {/* Main App Screens */}
       <MainStack.Screen name="Home" component={HomeScreen} />
       <MainStack.Screen name="Favourites" component={FavouritesScreen} />
       <MainStack.Screen name="Cart" component={CartScreen} />
       <MainStack.Screen name="Chat" component={ChatScreen} />
       <MainStack.Screen name="Profile" component={ProfileScreen} />
+
+      {/* Help Center */}
+      <MainStack.Screen name="HelpCenter" component={HelpCenterScreen} />
+
+      {/* Terms and Policies */}
+      <MainStack.Screen name="TermsAndPolicies" component={TermsAndPoliciesScreen} />
+
+      {/* Shop Screens */}
       <MainStack.Screen name="Shop" component={ShopScreen} />
+      <MainStack.Screen name="ShopDashboard" component={ShopDashboardScreen} />
+      <MainStack.Screen name="AddProduct" component={AddProductScreen} />
+      <MainStack.Screen name="ProductList" component={ProductListScreen} />
+      <MainStack.Screen name="OrderList" component={OrderListScreen} />
+      <MainStack.Screen name="AddressShop" component={AddressScreen} />
+      <MainStack.Screen name="UpdateShopProf" component={UpdateShopProfileScreen} />
+
+      {/* Seller Onboarding Screens */}
+      <MainStack.Screen name="InfoProfile" component={InformationProfile} />
+      <MainStack.Screen name="BusinessInfo" component={BusinessInformationScreen} />
+      <MainStack.Screen name="SetUpShop" component={SetUpShopScreen} />
+      <MainStack.Screen name="ShopInfo" component={ShopInformationScreen} />
+      <MainStack.Screen name="VerificationNumber" component={VerificationNumScreen} />
+      <MainStack.Screen name="RegistrationSuccess" component={SellerRegistrationSuccessScreen} />
+
+      {/* Pro Membership Screens */}
+      <MainStack.Screen name="Pro" component={ProScreen} />
+      <MainStack.Screen name="SelectPro" component={SelectProScreen} />
+      <MainStack.Screen name="ActivePro" component={ActiveProScreen} />
+
+      {/* Select Payment Screen */}
+      <MainStack.Screen name="SelectPayment" component={SelectPaymentScreen} />
     </MainStack.Navigator>
+  );
+};
+
+const AuthStack = createStackNavigator();
+const Auth = ({ isFirstLaunch }) => {
+  return (
+    <AuthStack.Navigator
+      initialRouteName={isFirstLaunch ? "Welcome" : "Banner" } 
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
+      <AuthStack.Screen name="Location" component={LocationScreen} />
+      <AuthStack.Screen name="Banner" component={BannerScreen} />
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Signup" component={SignupScreen} />
+    </AuthStack.Navigator>
   );
 };
 

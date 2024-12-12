@@ -115,10 +115,11 @@ export default function HomeScreen({ navigation }) {
           {/* Recommended Products */}
           <Text style={styles.sectionTitle}>Recommended Products</Text>
           <FlatList
-            data={filteredProducts}
+            data={filteredProducts} 
             renderItem={renderProduct}
             keyExtractor={(item) => item.id}
-            numColumns={2}
+            horizontal
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.productList}
           />
 

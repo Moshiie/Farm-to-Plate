@@ -1,4 +1,6 @@
 import React from 'react';
+import { collection, query, where } from "firebase/firestore";
+import { db } from '../firebaseConfig';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'react-native';
 
 // Import the local image
@@ -7,6 +9,7 @@ import basketIcon from '../images/cart.png'; // Adjust the path based on your pr
 const CartScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -37,8 +40,9 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },

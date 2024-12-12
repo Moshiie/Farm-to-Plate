@@ -1,19 +1,23 @@
-import React, { useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Image,
+  Alert,
 } from 'react-native';
-import { signOut } from 'firebase/auth';
+import Icon from 'react-native-vector-icons/FontAwesome'
 import { auth } from '../firebaseConfig';
-import { AuthContext } from "../providers/AuthProvider";
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { signOut } from 'firebase/auth';
+import { AuthContext } from '../providers/AuthProvider';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 
 const ProfileScreen = ({ navigation }) => {
-
+  const [avatar, setAvatar] = useState('https://via.placeholder.com/150'); // Default avatar
   const { setIsFirstLaunch } = useContext(AuthContext);
 
   const handleLogout = async () => {
@@ -25,84 +29,126 @@ const ProfileScreen = ({ navigation }) => {
       console.error(error.message);
     }
   };
+  // Function to handle image selection
+  const handleImageUpload = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Camera roll access is required to upload an image.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: [ImagePicker.MediaType.IMAGE],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setAvatar(result.assets[0].uri); // Update avatar with selected image
+    }
+  };
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient
-        colors={['#4CAF50', '#66BB6A']}
-        style={styles.header}>
+      <LinearGradient colors={['#2E4C2D', '#2E4C2D']} style={styles.header}>
         <Text style={styles.title}>Account</Text>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.gearButton}>
           <Icon name="gear" size={24} color="#fff" />
         </TouchableOpacity>
       </LinearGradient>
 
+
       {/* Profile Section */}
-        <View style={styles.profileSection}>
+      <View style={styles.profileSection}>
+        <TouchableOpacity onPress={handleImageUpload}>
+          <Image source={{ uri: avatar }} style={styles.avatar} />
+          <Text style={styles.uploadText}>Tap to upload</Text>
+        </TouchableOpacity>
         <Text style={styles.userName}>Juan Dela Cruz</Text>
-        <TouchableOpacity style={styles.editProfileButton}>
-            <Icon name="edit" size={16} color="#4CAF50" style={styles.actionIcon} />
-            <Text style={styles.editProfile}>Edit Profile</Text>
-        </TouchableOpacity>
-
-        {/* Shop Button */}
         <TouchableOpacity
-          style={styles.shopButton}
-          onPress={() => navigation.navigate('Shop')}  // Navigate to Shop screen
+          style={styles.editProfileButton}
+          onPress={() => navigation.navigate('InfoProfile')}
         >
-          <Icon name="shopping-cart" size={16} color="#4CAF50" style={styles.actionIcon} />
-          <Text style={styles.shopButtonText}>Shop</Text>
+          <Icon name="edit" size={16} color="#fff" style={styles.actionIcon} />
+          <Text style={styles.editProfile}>Edit Profile</Text>
         </TouchableOpacity>
-        </View>
+      </View>
 
-     {/* Action Buttons */}
-        <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.actionButton}>
-            <Icon name="list-alt" size={30} color="#4CAF50" />
-            <Text style={styles.actionText}>Orders</Text>
+      {/* Action Buttons */}
+      <View style={styles.actionsRow}>
+      <TouchableOpacity
+        style={styles.actionButton}
+        onPress={() => navigation.navigate('OrderList')} // Correct screen name
+      >
+        <Icon name="list-alt" size={30} color='#2E4C2D' />
+        <Text style={styles.actionText}>Orders</Text>
+      </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => navigation.navigate('Favourites')}
+        >
+          <Icon name="heart" size={30} color='#2E4C2D' />
+          <Text style={styles.actionText}>Favourites</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-            <Icon name="heart" size={30} color="#4CAF50" />
-            <Text style={styles.actionText}>Favourites</Text>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => navigation.navigate('AddressShop')} // Use the correct screen name
+        >
+          <Icon name="address-book" size={30} color='#2E4C2D' />
+          <Text style={styles.actionText}>Addresses</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-            <Icon name="address-book" size={30} color="#4CAF50" />
-            <Text style={styles.actionText}>Addresses</Text>
-        </TouchableOpacity>
-        </View>
+      </View>
 
       {/* Additional Sections */}
-        <ScrollView>
-            <TouchableOpacity style={styles.listItem}>
-                <View style={styles.listItemContent}>
-                <Icon name="star" size={20} color="#4CAF50" style={styles.listItemIcon} />
-                <Text style={styles.listItemText}>Become a Pro</Text>
-                </View>
-                <Icon name="angle-right" size={20} color="#4CAF50" />
-            </TouchableOpacity>
+      <ScrollView>
+        <TouchableOpacity
+          style={styles.listItem}
+          onPress={() => navigation.navigate('Pro')} // Navigates to ProScreen
+        >
+          <View style={styles.listItemContent}>
+            <FontAwesome5 name="crown" size={20} color="#FFD700" style={styles.listItemIcon} />
+            <Text style={styles.listItemText}>Become a Pro</Text>
+          </View>
+          <Icon name="angle-right" size={20} color="#4CAF50" />
+        </TouchableOpacity>
 
-            <TouchableOpacity style={styles.listItem}>
-                <View style={styles.listItemContent}>
-                <Icon name="question-circle" size={20} color="#4CAF50" style={styles.listItemIcon} />
-                <Text style={styles.listItemText}>Help Center</Text>
-                </View>
-                <Icon name="angle-right" size={20} color="#4CAF50" />
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.listItem}
+          onPress={() => navigation.navigate('HelpCenter')} // Navigates to HelpCenterScreen
+        >
+          <View style={styles.listItemContent}>
+            <Icon
+              name="question-circle"
+              size={20}
+              color='#2E4C2D'
+              style={styles.listItemIcon}
+            />
+            <Text style={styles.listItemText}>Help Center</Text>
+          </View>
+          <Icon name="angle-right" size={20} color="#4CAF50" />
+        </TouchableOpacity>
 
-            <TouchableOpacity style={styles.listItem}>
-                <View style={styles.listItemContent}>
-                <Icon name="file-text" size={20} color="#4CAF50" style={styles.listItemIcon} />
-                <Text style={styles.listItemText}>Terms & Policies</Text>
-                </View>
-                <Icon name="angle-right" size={20} color="#4CAF50" />
-            </TouchableOpacity>
-        </ScrollView>
+        <TouchableOpacity
+          style={styles.listItem}
+          onPress={() => navigation.navigate('TermsAndPolicies')}
+        >
+          <View style={styles.listItemContent}>
+            <Icon name="file-text" size={20} color='#2E4C2D' style={styles.listItemIcon} />
+            <Text style={styles.listItemText}>Terms & Policies</Text>
+          </View>
+          <Icon name="angle-right" size={20} color="#4CAF50" />
+        </TouchableOpacity>
+      </ScrollView>
 
       {/* Log Out Button */}
-      <TouchableOpacity 
-        onPress={handleLogout}
+      <TouchableOpacity
         style={styles.logoutButton}
+        onPress={() => Alert.alert('Log Out', 'Are you sure you want to log out?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log Out', style: 'destructive', onPress: () => handleLogout() },
+        ])}
       >
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
@@ -113,27 +159,50 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#C8D6C5',
   },
   header: {
-    padding: 20,
+    padding: 25,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     elevation: 5,
+    position: 'relative',
+    marginBottom: 15,
+  },
+  gearButton: {
+    position: 'absolute',
+    right: 20,
+    top: 25,
   },
   title: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
   },
   profileSection: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
     paddingVertical: 20,
     paddingHorizontal: 20,
     alignItems: 'center',
+    marginBottom: 10,
+    elevation: 5,
+    borderRadius: 10,
+    marginHorizontal: 15,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  uploadText: {
+    fontSize: 14,
+    color: '#4CAF50',
+    textAlign: 'center',
+    marginTop: 5,
   },
   userName: {
     fontSize: 20,
@@ -144,54 +213,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
-  },
-  shopButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    backgroundColor: '#2E4C2D',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
     borderRadius: 10,
     elevation: 5,
   },
-  actionIcon: {
-    marginRight: 8, // Spacing between icon and text
-  },
   editProfile: {
     fontSize: 16,
-    color: '#4CAF50',
+    color: '#fff',
+    marginLeft: 8,
   },
-  shopButton: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginTop: 10,
-  backgroundColor: '#fff', // White background
-  paddingHorizontal: 20,
-  paddingVertical: 10,
-  borderRadius: 10,
-  elevation: 5, // Adds shadow for elevation
-  borderWidth: 1, // Optional: border to define button edges
-  borderColor: '#4CAF50', // Border color to match the theme
-},
-actionIcon: {
-  marginRight: 8, // Space between the icon and the text
-},
-shopButtonText: {
-  fontSize: 16,
-  color: '#000', // Black text color
-},
   actionsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Spaces the buttons evenly across the row
-    alignItems: 'center', // Centers buttons vertically
-    marginHorizontal: 20, // Adds padding on the sides
+    justifyContent: 'space-around',
+    marginHorizontal: 20,
     marginVertical: 20,
   },
   actionButton: {
     alignItems: 'center',
-    flex: 1, // Ensures buttons adjust spacing
-    marginHorizontal: 10, // Adds space between buttons
+    flex: 1,
+    marginHorizontal: 10,
+    paddingVertical: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    elevation: 5,
   },
   actionText: {
     marginTop: 5,
@@ -206,16 +252,18 @@ shopButtonText: {
     marginHorizontal: 20,
     borderRadius: 10,
     backgroundColor: '#fff',
-    marginVertical: 5,
+    marginVertical: 8,
     elevation: 2,
   },
-  listItemText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+  listItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  listItemIcon: {
+    marginRight: 10,
   },
   logoutButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#E63946',
     padding: 15,
     margin: 20,
     borderRadius: 10,
@@ -225,17 +273,6 @@ shopButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  listItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  listItemIcon: {
-    marginRight: 10, // Adds spacing between the icon and text
-  },
-  listItemText: {
-    fontSize: 16,
-    color: '#000',
   },
 });
 

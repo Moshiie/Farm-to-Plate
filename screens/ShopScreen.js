@@ -18,7 +18,7 @@ const ShopScreen = () => {
       {/* Start Registration Button */}
       <TouchableOpacity
         style={styles.startRegistrationButton}
-        onPress={() => navigation.navigate('Registration')} // Navigate to registration screen
+        onPress={() => navigation.navigate('SetUp')} // Navigate to registration screen
       >
         <Text style={styles.startRegistrationText}>Start Registration</Text>
       </TouchableOpacity>
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   startRegistrationButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#09320a',
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 10,

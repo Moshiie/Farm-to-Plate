@@ -24,14 +24,19 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     try {
+      
+      if (!email && !password) {
+        Alert.alert('Invalid Input', 'Please enter your email and password.');
+        return;
+      }
 
       if (!email) {
-        Alert.alert('Invalid Input', 'Please enter email.');
+        Alert.alert('Invalid Input', 'Please enter your email.');
         return;
       }
 
       if (!password) {
-        Alert.alert('Invalid Input', 'Please enter password.');
+        Alert.alert('Invalid Input', 'Please enter your password.');
         return;
       }
 
@@ -40,8 +45,8 @@ export default function LoginScreen({ navigation }) {
 
   } catch (error) {
     Alert.alert('Login Error', error.message);
-    setEmail("");
-    setPassword("");
+    // setEmail("");
+    // setPassword("");
   }
   };
 
