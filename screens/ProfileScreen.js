@@ -66,7 +66,7 @@ const ProfileScreen = ({ navigation }) => {
           <Image source={{ uri: avatar }} style={styles.avatar} />
           <Text style={styles.uploadText}>Tap to upload</Text>
         </TouchableOpacity>
-        <Text style={styles.userName}>{userData.first_name + " " + userData.last_name}</Text>
+        <Text style={styles.userName}>{(userData.first_name && userData.last_name) ? `${userData.first_name} ${userData.last_name}` : userData.email}</Text>
         <TouchableOpacity
           style={styles.editProfileButton}
           onPress={() => navigation.navigate('InfoProfile')}

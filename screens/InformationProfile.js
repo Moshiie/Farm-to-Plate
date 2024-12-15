@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from "react";
 import {
   StyleSheet,
   View,
@@ -7,57 +7,73 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-} from 'react-native';
-import { AuthContext } from '../providers/AuthProvider';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
+} from "react-native";
+import { db } from "../firebaseConfig";
+import { updateDoc, doc } from 'firebase/firestore';
+import { AuthContext } from "../providers/AuthProvider";
+import { Formik } from "formik";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as Yup from "yup";
 
 const InformationProfile = ({ navigation }) => {
 
-  const { userData } = useContext(AuthContext);
-  
-  // Assume this is the current shop data (you can replace this with a fetch from backend)
-  const [userInfo, setUserInfo] = useState({
-    first_name: "User A",
-    last_name: 'Christmas',
-    gender: "",
-    deliveryAddress: '123 Main St',
-    phoneNumber: '09123456789',
-  });
+  const { userData, setUserData } = useContext(AuthContext);
 
-  useEffect(() => {
-    // In a real app, this would be an API call to fetch the current shop data
-    // For now, using mock data.
-    setUserInfo({
-      first_name: "User A",
-      last_name: 'Christmas',
-      gender: "",
-      deliveryAddress: '123 Main St',
-      phoneNumber: '09123456789',
-    });
-  }, []);
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date()); // This manages the date
 
   const userSchema = Yup.object().shape({
-    first_name: Yup.string().required('First name is required'),
-    last_name: Yup.string().required('Last name is required'),
-    gender: Yup.string().required('Gender is required'),
-    deliveryAddress: Yup.string().required('Delivery address is required'),
-    phoneNumber: Yup.string()
-      .matches(/^[0-9]+$/, 'Only numbers are allowed')
-      .min(11, 'Must be at least 11 digits')
-      .required('Phone number is required'),
+    first_name: Yup.string().required("First name is required"),
+    last_name: Yup.string().required("Last name is required"),
+    gender: Yup.string().required("Gender is required"),
+    email: Yup.string().required("Email is required"),
+    phone_number: Yup.string()
+      .matches(/^[0-9]+$/, "Only numbers are allowed")
+      .min(11, "Must be at least 11 digits")
+      .required("Phone number is required"),
+    date_of_birth: Yup.date().required("Date of Birth is required"),
   });
 
-  const handleRegistration = (values) => {
-    Alert.alert('Success', 'User Information Updated Successfully!', 
-      [{ 
-        text: 'OK', 
-        onPress: () => {navigation.goBack();
-        }
-      }]
-    );
+  const handleRegistration = async (values) => {
+    const userRef = doc(db, "users", userData.uid);
+
+    try {
+      await updateDoc(userRef, {
+        first_name: values.first_name,
+        last_name: values.last_name,
+        gender: values.gender,
+        email: values.email,
+        phone_number: values.phone_number,
+        date_of_birth: values.date_of_birth,
+      });
+
+      setUserData((prevData) => ({
+        ...prevData,
+        first_name: values.first_name,
+        last_name: values.last_name,
+        gender: values.gender,
+        email: values.email,
+        phone_number: values.phone_number,
+        date_of_birth: values.date_of_birth,
+      }));
+
+      console.log(userData);
+
+      Alert.alert("Success", "User Information Updated Successfully!", [
+        {
+          text: "OK",
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
+      ]);
+
+    } catch (error) {
+      console.error("Error updating user data:", error);
+      Alert.alert("Error", "Failed to update user information. Please try again.");
+    }
+
     console.log(values);
-    // Here, you would typically update the backend with the new information
   };
 
   return (
@@ -67,23 +83,32 @@ const InformationProfile = ({ navigation }) => {
 
         <Formik
           initialValues={{
-            first_name: userInfo.first_name,
-            last_name: userInfo.last_name,
-            gender: userInfo.gender,
-            deliveryAddress: userInfo.deliveryAddress,
-            phoneNumber: userInfo.phoneNumber,
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+            gender: userData.gender,
+            email: userData.email,
+            phone_number: userData.phone_number,
+            date_of_birth: selectedDate, // Manage the date via selectedDate state
           }}
           validationSchema={userSchema}
           onSubmit={handleRegistration}
         >
-          {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            setFieldValue,
+            errors,
+            touched,
+          }) => (
             <View>
-              {/* Shop Name */}
-              <Text style={styles.label}>First Name </Text>
+              {/* First Name */}
+              <Text style={styles.label}>First Name</Text>
               <TextInput
                 style={styles.input}
-                onChangeText={handleChange('first_name')}
-                onBlur={handleBlur('first_name')}
+                onChangeText={handleChange("first_name")}
+                onBlur={handleBlur("first_name")}
                 value={userData.first_name}
                 placeholder="Enter first name"
               />
@@ -91,11 +116,12 @@ const InformationProfile = ({ navigation }) => {
                 <Text style={styles.error}>{errors.first_name}</Text>
               )}
 
-              <Text style={styles.label}>Last Name </Text>
+              {/* Last Name */}
+              <Text style={styles.label}>Last Name</Text>
               <TextInput
                 style={styles.input}
-                onChangeText={handleChange('last_name')}
-                onBlur={handleBlur('last_name')}
+                onChangeText={handleChange("last_name")}
+                onBlur={handleBlur("last_name")}
                 value={userData.last_name}
                 placeholder="Enter last name"
               />
@@ -103,11 +129,39 @@ const InformationProfile = ({ navigation }) => {
                 <Text style={styles.error}>{errors.last_name}</Text>
               )}
 
-              <Text style={styles.label}>Gender </Text>
+              {/* Email */}
+              <Text style={styles.label}>Email Address</Text>
               <TextInput
                 style={styles.input}
-                onChangeText={handleChange('gender')}
-                onBlur={handleBlur('gender')}
+                onChangeText={handleChange("email")}
+                onBlur={handleBlur("email")}
+                value={values.email}
+                placeholder="Enter email address"
+              />
+              {touched.email && errors.email && (
+                <Text style={styles.error}>{errors.email}</Text>
+              )}
+
+              {/* Phone Number */}
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={styles.input}
+                onChangeText={handleChange("phone_number")}
+                onBlur={handleBlur("phone_number")}
+                value={values.phone_number}
+                placeholder="Enter phone number"
+                keyboardType="phone-pad"
+              />
+              {touched.phone_number && errors.phone_number && (
+                <Text style={styles.error}>{errors.phone_number}</Text>
+              )}
+
+              {/* Gender */}
+              <Text style={styles.label}>Gender</Text>
+              <TextInput
+                style={styles.input}
+                onChangeText={handleChange("gender")}
+                onBlur={handleBlur("gender")}
                 value={values.gender}
                 placeholder="Enter Gender"
               />
@@ -115,40 +169,39 @@ const InformationProfile = ({ navigation }) => {
                 <Text style={styles.error}>{errors.gender}</Text>
               )}
 
-              {/* Pickup Address */}
-              <Text style={styles.label}>Delivery Address </Text>
-              <TextInput
+              {/* Date of Birth */}
+              <Text style={styles.label}>Date of Birth</Text>
+              <TouchableOpacity
                 style={styles.input}
-                onChangeText={handleChange('deliveryAddress')}
-                onBlur={handleBlur('deliveryAddress')}
-                value={values.deliveryAddress}
-                placeholder="Enter delivery address"
-              />
-              {touched.pickupAddress && errors.pickupAddress && (
-                <Text style={styles.error}>{errors.pickupAddress}</Text>
+                onPress={() => setDatePickerVisible(true)}
+              >
+                <Text>
+                  {values.date_of_birth
+                    ? values.date_of_birth.toLocaleDateString()
+                    : "Select Date of Birth"}
+                </Text>
+              </TouchableOpacity>
+              {touched.date_of_birth && errors.date_of_birth && (
+                <Text style={styles.error}>{errors.date_of_birth}</Text>
               )}
 
-              {/* Phone Number */}
-              <Text style={styles.label}>Phone Number </Text>
-              <TextInput
-                style={styles.input}
-                onChangeText={handleChange('phoneNumber')}
-                onBlur={handleBlur('phoneNumber')}
-                value={userData.phone_number || values.phoneNumber}
-                placeholder="Enter phone number"
-                keyboardType="phone-pad"
-              />
-              {touched.phoneNumber && errors.phoneNumber && (
-                <Text style={styles.error}>{errors.phoneNumber}</Text>
+              {/* DatePicker using DateTimePicker */}
+              {datePickerVisible && (
+                <DateTimePicker
+                  mode="date"
+                  value={selectedDate}
+                  onChange={(event, selectedDate) => {
+                    if (selectedDate) {
+                      setSelectedDate(selectedDate);
+                      setFieldValue("date_of_birth", selectedDate);
+                    }
+                    setDatePickerVisible(false);
+                  }}
+                />
               )}
 
               {/* Submit Button */}
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => {
-                  handleSubmit(); // Navigate after submitting
-                }}
-              >
+              <TouchableOpacity style={styles.button} onPress={handleSubmit}>
                 <Text style={styles.buttonText}>Save Changes</Text>
               </TouchableOpacity>
             </View>
@@ -162,18 +215,18 @@ const InformationProfile = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    padding: '5%',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    padding: "5%",
   },
   formWrapper: {
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     padding: 20,
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -181,40 +234,40 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 20,
-    color: '#333',
+    color: "#333",
   },
   label: {
     fontSize: 14,
-    color: '#555',
+    color: "#555",
     marginBottom: 5,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     fontSize: 14,
   },
   button: {
-    backgroundColor: '#09320a',
+    backgroundColor: "#09320a",
     paddingVertical: 12,
     borderRadius: 5,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   error: {
     fontSize: 12,
-    color: '#ff0000',
+    color: "#ff0000",
     marginBottom: 10,
   },
 });

@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import{ auth, db } from '../firebaseConfig';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -30,14 +30,26 @@ const AuthProvider = (props) => {
   const fetchUserData = async (uid) => {
     try {
       // the user document from Firestore using the user's UID
-      const docRef = doc(db, 'users', uid); //Create Reference
-      const docSnap = await getDoc(docRef); //Get Specific User Doc using Reference
+      const docRef = doc(db, 'users', uid); 
+      const docSnap = await getDoc(docRef); 
 
       if (docSnap.exists()) {
         setUserData(docSnap.data());  // Set user data from Firestore to state
+
       } else {
-        console.log('No such document!');
+        console.log('No user document found, creating one.');
+    
+        await setDoc(docRef, {
+          email: userAuthData.email,
+          uid: userAuthData.uid
+        });
+  
+        setUserData({
+          email: userAuthData.email,
+          uid: userAuthData.uid
+        });
       }
+
     } catch (error) {
       console.error('Error fetching user data: ', error);
     }
@@ -50,6 +62,7 @@ const AuthProvider = (props) => {
         userAuthData,
         userData,
         isFirstLaunch,
+        setUserData,
         setIsFirstLaunch
       }}
     >

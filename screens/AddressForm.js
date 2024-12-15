@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Switch
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { doc, collection, addDoc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { db, batch } from '../firebaseConfig'; 
 import { AuthContext } from '../providers/AuthProvider';
@@ -20,13 +20,13 @@ const AddressForm = ({ navigation, route }) => {
   const { isEdit = false, addressData = null } = route.params || {}; 
 
   const [name, setName] = useState(addressData?.name || '');
-  const [phoneNumber, setPhoneNumber] = useState(addressData?.phoneNumber || '');
-  const [addressLine1, setAddressLine1] = useState(addressData?.address || '');
+  const [phoneNumber, setPhoneNumber] = useState(addressData?.phone_number || '');
+  const [addressLine1, setAddressLine1] = useState(addressData?.address_line_1 || '');
   const [barangay, setBarangay] = useState(addressData?.barangay || '');
   const [city, setCity] = useState(addressData?.city || '');
-  const [zipCode, setZipCode] = useState(addressData?.zipCode || '');
-  const [addressType, setAddressType] = useState(addressData?.type || 'delivery');
-  const [isDefault, setIsDefault] = useState(addressData?.isDefault || false);
+  const [zipCode, setZipCode] = useState(addressData?.zip_code || '');
+  const [addressType, setAddressType] = useState(addressData?.address_type || 'delivery');
+  const [isDefault, setIsDefault] = useState(addressData?.isdefault || false);
   const [region, setRegion] = useState(
     addressData?.region || {
       latitude: 8.484722, 
@@ -35,24 +35,15 @@ const AddressForm = ({ navigation, route }) => {
       longitudeDelta: 0.005, 
     }
   );
-
-  console.log(isEdit);
-  console.log(addressData);
-  console.log(region);
-
-  // useEffect(() => {
-  //   if (!isEdit) {
-  //     setRegion({
-  //       latitude: 8.484722,
-  //       longitude: 124.656278,
-  //       latitudeDelta: 0.005,
-  //       longitudeDelta: 0.005,
-  //     });
-  //   }
-  // }, [isEdit]);
+  
+  useEffect(() => {
+    if (isEdit && addressData) {
+      setRegion(addressData.region || region);
+    }
+  }, [isEdit, addressData]);
   
   const handleSave = async () => {
-    if (!addressLine1 || !city || !zipCode || !name || !phoneNumber || barangay) {
+    if (!addressLine1 || !city || !zipCode || !name || !phoneNumber || !barangay) {
       Alert.alert('Validation Error', 'All fields are required!');
       return;
     }
@@ -156,15 +147,12 @@ const AddressForm = ({ navigation, route }) => {
         onChangeText={setZipCode}
         keyboardType="numeric"
       />
-      <View style={styles.mapContainer}>
-        <MapView
-          style={styles.map}
-          initialRegion={region}
-          onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
-        >
-          <Marker coordinate={{ latitude: region.latitude, longitude: region.longitude }} />
-        </MapView>
-      </View>
+
+      {/* Navigate to the Map Screen to select Address */}
+      <TouchableOpacity onPress={() => navigation.navigate('MapScreen', { initialRegion: region })}>
+        <Text style={styles.link}>Set Address on Map</Text>
+      </TouchableOpacity>
+      
       <Text style={styles.label}>Address Type:</Text>
       <TouchableOpacity onPress={() => setAddressType('delivery')}>
         <Text style={addressType === 'delivery' ? styles.selected : styles.option}>Delivery</Text>
@@ -203,11 +191,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   mapContainer: {
-    height: 200,
+    height: 250,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
     marginBottom: 10,
+  },
+  link: { 
+    color: '#007BFF', 
+    textDecorationLine: 'underline' 
   },
   map: {
     flex: 1,

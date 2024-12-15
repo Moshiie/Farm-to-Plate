@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,7 +15,9 @@ import {
   Alert,
 } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
+import { auth, db } from '../firebaseConfig';
+import { doc, setDoc } from 'firebase/firestore';
+import { AuthContext } from '../providers/AuthProvider';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,19 +25,33 @@ import { LinearGradient } from 'expo-linear-gradient';
 const { width } = Dimensions.get('window');
 
 export default function SignupScreen({ navigation }) {
-  const [fullname, setFullName] = useState('');
+
+  const { userData, setUserData } = useContext(AuthContext);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [modalAnimation] = useState(new Animated.Value(0));
 
   const handleSignup = async () => {
-    try {
+    try { 
 
+      //Sign up the user with Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      //Create the corresponding user document in the Firestore database
+      await setDoc(doc(db, 'users', user.uid), {
+        email: email,
+        role: 'buyer',
+        created_at: new Date(),
+        uid: user.uid
+      });
+
       console.log('User signed up:', user.uid);
+
+      //Store user data in context
+      setUserData({ email: user.email, role: user.role, uid: user.uid }); 
       
       setModalVisible(true);
       Animated.timing(modalAnimation, {
@@ -45,9 +61,6 @@ export default function SignupScreen({ navigation }) {
         useNativeDriver: true,
       }).start();
 
-
-      // Clear inputs after successful signup
-      setFullName('');
       setEmail('');
       setPassword('');
       
@@ -55,6 +68,12 @@ export default function SignupScreen({ navigation }) {
       Alert.alert('Signup Error', error.message);
     }
   };
+
+  useEffect(() => {
+    if (userData) {
+      console.log('User data updated:', userData); // Log after the state change
+    }
+  }, [userData]);
 
   const closeModal = () => {
     Animated.timing(modalAnimation, {
@@ -96,13 +115,6 @@ export default function SignupScreen({ navigation }) {
             style={styles.logo}
           />
           <Text style={styles.title}>Sign Up</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Full Name"
-            placeholderTextColor="#ddd"
-            value={fullname}
-            onChangeText={setFullName}
-          />
           <TextInput
             style={styles.input}
             placeholder="Email"

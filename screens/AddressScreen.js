@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -11,6 +11,7 @@ import { AuthContext } from '../providers/AuthProvider';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
 const AddressScreen = ({ navigation }) => {
   
@@ -62,6 +63,12 @@ const AddressScreen = ({ navigation }) => {
   useEffect(() => {
     fetchAddresses();
   }, [userAuthData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAddresses();  // Re-fetch addresses when returning from AddressForm
+    }, [])
+  );
 
   if (loading) {
     return (
