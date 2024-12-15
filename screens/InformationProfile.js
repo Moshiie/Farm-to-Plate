@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,44 +8,48 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../providers/AuthProvider';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 
-const InformationProfile = () => {
-  const navigation = useNavigation();
+const InformationProfile = ({ navigation }) => {
+
+  const { userData } = useContext(AuthContext);
   
   // Assume this is the current shop data (you can replace this with a fetch from backend)
-  const [shopData, setShopData] = useState({
-    shopName: 'Shop A',
-    pickupAddress: '123 Main St',
-    email: 'shop@example.com',
+  const [userInfo, setUserInfo] = useState({
+    first_name: "User A",
+    last_name: 'Christmas',
+    gender: "",
+    deliveryAddress: '123 Main St',
     phoneNumber: '09123456789',
   });
 
   useEffect(() => {
     // In a real app, this would be an API call to fetch the current shop data
     // For now, using mock data.
-    setShopData({
-      shopName: 'Shop A',
-      pickupAddress: '123 Main St',
-      email: 'shop@example.com',
+    setUserInfo({
+      first_name: "User A",
+      last_name: 'Christmas',
+      gender: "",
+      deliveryAddress: '123 Main St',
       phoneNumber: '09123456789',
     });
   }, []);
 
-  const ShopSchema = Yup.object().shape({
-    shopName: Yup.string().required('Shop name is required'),
-    pickupAddress: Yup.string().required('Pickup address is required'),
-    email: Yup.string().email('Invalid email').required('Email is required'),
+  const userSchema = Yup.object().shape({
+    first_name: Yup.string().required('First name is required'),
+    last_name: Yup.string().required('Last name is required'),
+    gender: Yup.string().required('Gender is required'),
+    deliveryAddress: Yup.string().required('Delivery address is required'),
     phoneNumber: Yup.string()
       .matches(/^[0-9]+$/, 'Only numbers are allowed')
-      .min(10, 'Must be at least 10 digits')
+      .min(11, 'Must be at least 11 digits')
       .required('Phone number is required'),
   });
 
   const handleRegistration = (values) => {
-    Alert.alert('Success', 'Shop Information Updated Successfully!', 
+    Alert.alert('Success', 'User Information Updated Successfully!', 
       [{ 
         text: 'OK', 
         onPress: () => {navigation.goBack();
@@ -63,54 +67,65 @@ const InformationProfile = () => {
 
         <Formik
           initialValues={{
-            shopName: shopData.shopName,
-            pickupAddress: shopData.pickupAddress,
-            email: shopData.email,
-            phoneNumber: shopData.phoneNumber,
+            first_name: userInfo.first_name,
+            last_name: userInfo.last_name,
+            gender: userInfo.gender,
+            deliveryAddress: userInfo.deliveryAddress,
+            phoneNumber: userInfo.phoneNumber,
           }}
-          validationSchema={ShopSchema}
+          validationSchema={userSchema}
           onSubmit={handleRegistration}
         >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View>
               {/* Shop Name */}
-              <Text style={styles.label}>Full Name </Text>
+              <Text style={styles.label}>First Name </Text>
               <TextInput
                 style={styles.input}
-                onChangeText={handleChange('shopName')}
-                onBlur={handleBlur('shopName')}
-                value={values.shopName}
-                placeholder="Enter shop name"
+                onChangeText={handleChange('first_name')}
+                onBlur={handleBlur('first_name')}
+                value={userData.first_name}
+                placeholder="Enter first name"
               />
-              {touched.shopName && errors.shopName && (
-                <Text style={styles.error}>{errors.shopName}</Text>
+              {touched.first_name && errors.first_name && (
+                <Text style={styles.error}>{errors.first_name}</Text>
+              )}
+
+              <Text style={styles.label}>Last Name </Text>
+              <TextInput
+                style={styles.input}
+                onChangeText={handleChange('last_name')}
+                onBlur={handleBlur('last_name')}
+                value={userData.last_name}
+                placeholder="Enter last name"
+              />
+              {touched.last_name && errors.last_name && (
+                <Text style={styles.error}>{errors.last_name}</Text>
+              )}
+
+              <Text style={styles.label}>Gender </Text>
+              <TextInput
+                style={styles.input}
+                onChangeText={handleChange('gender')}
+                onBlur={handleBlur('gender')}
+                value={values.gender}
+                placeholder="Enter Gender"
+              />
+              {touched.gender && errors.gender && (
+                <Text style={styles.error}>{errors.gender}</Text>
               )}
 
               {/* Pickup Address */}
-              <Text style={styles.label}>Pickup Address </Text>
+              <Text style={styles.label}>Delivery Address </Text>
               <TextInput
                 style={styles.input}
-                onChangeText={handleChange('pickupAddress')}
-                onBlur={handleBlur('pickupAddress')}
-                value={values.pickupAddress}
-                placeholder="Enter pickup address"
+                onChangeText={handleChange('deliveryAddress')}
+                onBlur={handleBlur('deliveryAddress')}
+                value={values.deliveryAddress}
+                placeholder="Enter delivery address"
               />
               {touched.pickupAddress && errors.pickupAddress && (
                 <Text style={styles.error}>{errors.pickupAddress}</Text>
-              )}
-
-              {/* Email */}
-              <Text style={styles.label}>Email Address </Text>
-              <TextInput
-                style={styles.input}
-                onChangeText={handleChange('email')}
-                onBlur={handleBlur('email')}
-                value={values.email}
-                placeholder="Enter email"
-                keyboardType="email-address"
-              />
-              {touched.email && errors.email && (
-                <Text style={styles.error}>{errors.email}</Text>
               )}
 
               {/* Phone Number */}
@@ -119,7 +134,7 @@ const InformationProfile = () => {
                 style={styles.input}
                 onChangeText={handleChange('phoneNumber')}
                 onBlur={handleBlur('phoneNumber')}
-                value={values.phoneNumber}
+                value={userData.phone_number || values.phoneNumber}
                 placeholder="Enter phone number"
                 keyboardType="phone-pad"
               />

@@ -123,7 +123,7 @@ const SelectProScreen = ({ navigation }) => {
           <Icon name="credit-card" size={20} color="#4CAF50" />
           <Text style={styles.paymentText}>GCash (Alipay + Partner)</Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate('SelectPayment')} // Navigate to SelectPaymentScreen
+            onPress={() => navigation.navigate('SelectPayment')}
           >
             <Icon name="pencil" size={20} color="#4CAF50" />
           </TouchableOpacity>
@@ -168,13 +168,14 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
     backgroundColor: '#e3f2fd',
   },
   headerTitle: {
+    flex: 1,
     fontSize: 18,
+    textAlign: 'center',
     fontWeight: 'bold',
   },
   sectionContainer: {

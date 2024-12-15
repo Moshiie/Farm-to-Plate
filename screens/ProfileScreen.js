@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome'
 import { auth } from '../firebaseConfig';
 import { signOut } from 'firebase/auth';
@@ -18,7 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 const ProfileScreen = ({ navigation }) => {
   const [avatar, setAvatar] = useState('https://via.placeholder.com/150'); // Default avatar
-  const { setIsFirstLaunch } = useContext(AuthContext);
+  const { setIsFirstLaunch, userData } = useContext(AuthContext);
 
   const handleLogout = async () => {
     try {
@@ -65,7 +66,7 @@ const ProfileScreen = ({ navigation }) => {
           <Image source={{ uri: avatar }} style={styles.avatar} />
           <Text style={styles.uploadText}>Tap to upload</Text>
         </TouchableOpacity>
-        <Text style={styles.userName}>Juan Dela Cruz</Text>
+        <Text style={styles.userName}>{userData.first_name + " " + userData.last_name}</Text>
         <TouchableOpacity
           style={styles.editProfileButton}
           onPress={() => navigation.navigate('InfoProfile')}
@@ -94,7 +95,7 @@ const ProfileScreen = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => navigation.navigate('AddressShop')} // Use the correct screen name
+          onPress={() => navigation.navigate('Addresses')} // Use the correct screen name
         >
           <Icon name="address-book" size={30} color='#2E4C2D' />
           <Text style={styles.actionText}>Addresses</Text>
@@ -152,6 +153,19 @@ const ProfileScreen = ({ navigation }) => {
       >
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
+
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+          <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+            <Ionicons name="home-outline" size={28} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
+            <Ionicons name="chatbubble-outline" size={28} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+            <Ionicons name="person" size={28} color="#7A9F59" />
+          </TouchableOpacity>
+        </View>
     </View>
   );
 };
@@ -266,6 +280,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E63946',
     padding: 15,
     margin: 20,
+    marginBottom: 60,
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -273,6 +288,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#fff',
+    paddingVertical: 10,
+    width: '100%',
+    borderTopColor: '#ccc',
+    borderTopWidth: 1,
+    position: 'absolute',
+    bottom: 0,
   },
 });
 

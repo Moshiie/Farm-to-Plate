@@ -67,8 +67,8 @@ const Main = () => {
       <MainStack.Screen name="AddProduct" component={AddProductScreen} />
       <MainStack.Screen name="ProductList" component={ProductListScreen} />
       <MainStack.Screen name="OrderList" component={OrderListScreen} />
-      <MainStack.Screen name="AddressShop" component={AddressScreen} />
-      <MainStack.Screen name="UpdateShopProf" component={UpdateShopProfileScreen} />
+      <MainStack.Screen name="Addresses" component={AddressScreen} />
+      <MainStack.Screen name="UpdateShopProfile" component={UpdateShopProfileScreen} />
 
       {/* Seller Onboarding Screens */}
       <MainStack.Screen name="InfoProfile" component={InformationProfile} />

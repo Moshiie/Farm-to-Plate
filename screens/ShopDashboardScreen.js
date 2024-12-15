@@ -8,7 +8,7 @@ const ShopDashboardScreen = ({navigation}) => {
       {/* Header Section */}
       <View style={styles.header}>
         <Text style={styles.shopName}>Shop Name</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('UpdateShopProf')}>
+        <TouchableOpacity onPress={() => navigation.navigate('UpdateShopProfile')}>
             <MaterialIcons name="account-circle" size={28} color="#FFF" />
         </TouchableOpacity>
       </View>
@@ -18,7 +18,7 @@ const ShopDashboardScreen = ({navigation}) => {
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddProdt')}>
+        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddProduct')}>
           <Text style={styles.addButtonText}>+ Add product</Text>
         </TouchableOpacity>
       </ImageBackground>
@@ -35,7 +35,7 @@ const ShopDashboardScreen = ({navigation}) => {
           <Text style={styles.featureButtonText}>Orders</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.featureButton} onPress={() => navigation.navigate('AddressShop')}>
+        <TouchableOpacity style={styles.featureButton} onPress={() => navigation.navigate('Addresses')}>
           <MaterialIcons name="location-on" size={24} color="#2E4C2D" />
           <Text style={styles.featureButtonText}>Addresses</Text>
         </TouchableOpacity>

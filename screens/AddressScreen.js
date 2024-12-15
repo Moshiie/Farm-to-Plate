@@ -26,7 +26,7 @@ const AddressScreen = ({ navigation }) => {
             <Text style={styles.subText}>Address</Text>
           </View>
           <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditAddress')}>
-            <Text style={styles.editText}>edit</Text>
+            <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,99 @@ import {
   SafeAreaView,
   FlatList,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { collection, query, where } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { db } from '../firebaseConfig';
+import { useFocusEffect } from '@react-navigation/native';
+import { AuthContext } from '../providers/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function FavouritesScreen({ navigation, route }) {
-  // Retrieve the favourites list and initialize it in state
-  const [favourites, setFavourites] = useState(route.params?.favourites || []);
+export default function FavouritesScreen({ navigation }) {
+
+  const {userAuthData} = useContext(AuthContext);
+
+  const [favourites, setFavourites] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!userAuthData?.uid) {
+        return;
+      }
+
+      const fetchFavourites = async () => {
+        setLoading(true);
+        try {
+          const likedProductsRef = collection(db, `users/${userAuthData.uid}/liked_products`);
+          const snapshot = await getDocs(likedProductsRef);
+
+          const likedProducts = snapshot.docs.map((doc) => ({
+            id: doc.id,  // Firebase assigns this automatically
+            ...doc.data(),
+          }));
+
+          setFavourites(likedProducts);
+          
+        } catch (error) {
+          console.log('Error fetching favourites:', error);
+          
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchFavourites();
+
+      return () => {
+        // Clean up or reset state if needed (optional)
+      };
+    }, [userAuthData?.uid])
+  );
+
+  {/*useEffect(() => {
+    if (!userAuthData?.uid) {
+      return; 
+    }
+
+    const fetchFavourites = async () => {
+      setLoading(true);
+      try {
+        const likedProductsRef = collection(db,`users/${userAuthData.uid}/liked_products`);
+        const snapshot = await getDocs(likedProductsRef);
+
+        const likedProducts = snapshot.docs.map(doc => ({
+          id: doc.id,  // Firebase assigns this automatically, or you can use it as the key
+          ...doc.data()
+        }));
+        
+        setFavourites(likedProducts);
+      } catch (error) {
+        console.log('Error fetching favourites:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavourites();
+  }, [userAuthData?.uid]);*/}
+
+  const removeFavourite = async (item) => {
+    setLoading(true);
+    try {
+      const itemRef = doc(db, `users/${userAuthData.uid}/liked_products`, item.id);
+      await deleteDoc(itemRef); 
+
+      setFavourites((prevFavourites) =>
+        prevFavourites.filter((favourite) => favourite.id !== item.id)
+      );
+      
+    } catch (error) {
+      console.error('Error removing item from favourites:', error);
+    } finally { 
+      setLoading(false);
+    }
+  };
 
   // Function to remove an item from favourites
   const handleRemoveItem = (item) => {
@@ -26,11 +111,7 @@ export default function FavouritesScreen({ navigation, route }) {
         {
           text: 'Remove',
           style: 'destructive',
-          onPress: () => {
-            setFavourites((prevFavourites) =>
-              prevFavourites.filter((favourite) => favourite.id !== item.id)
-            );
-          },
+          onPress: () => removeFavourite(item),
         },
       ]
     );
@@ -41,8 +122,8 @@ export default function FavouritesScreen({ navigation, route }) {
       <Ionicons name="image-outline" size={50} color="#4CAF50" style={styles.itemIcon} />
       <View style={styles.itemDetails}>
         <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>{item.price}</Text>
-        <Text style={styles.productSold}>{item.sold}</Text>
+        <Text style={styles.productPrice}>₱ {item.price}</Text>
+        <Text style={styles.productSold}>Stock: {item.stock}</Text>
       </View>
       <TouchableOpacity
         style={styles.removeButton}
@@ -58,17 +139,21 @@ export default function FavouritesScreen({ navigation, route }) {
       {/* Top Bar */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.title}>Favourites</Text>
-        <TouchableOpacity>
-          <Ionicons name="cart-outline" size={24} color="#333" />
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="cart-outline" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
 
       {/* Main Content */}
       <View style={styles.container}>
-        {favourites.length > 0 ? (
+        {loading ? (
+          <View style={styles.loadingWrapper}>
+            <ActivityIndicator size="large" color="#006400" />
+          </View>
+        ) : favourites.length > 0 ? (
           <FlatList
             data={favourites}
             renderItem={renderFavouriteItem}
@@ -111,26 +196,38 @@ export default function FavouritesScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#C8D6C5',
   },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
-    backgroundColor: '#fff',
+    backgroundColor: '#2E4C2D',
+    paddingHorizontal: 15,
+    paddingVertical: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#FFF',
   },
   container: {
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 10,
+  },
+  loadingWrapper: {
+    position: 'absolute', 
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', 
+    zIndex: 1, 
   },
   favouritesList: {
     paddingBottom: 20,

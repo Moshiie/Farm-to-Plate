@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,7 +10,11 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
+  ActivityIndicator 
 } from 'react-native';
+import { db } from '../firebaseConfig'; // Import Firestore from your config file
+import { collection, doc, getDocs, setDoc, deleteDoc} from 'firebase/firestore';
+import { AuthContext } from '../providers/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -18,38 +22,67 @@ const screenWidth = Dimensions.get('window').width;
 const cardWidth = screenWidth / 2 - 20;
 
 export default function HomeScreen({ navigation }) {
+
+  const { userData, userAuthData } = useContext(AuthContext);
+
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [products, setProducts] = useState([
-    { id: '1', name: 'Tomato', price: '₱ 20.00', sold: '10 sold', isFavourite: false },
-    { id: '2', name: 'Cucumber', price: '₱ 15.00', sold: '5 sold', isFavourite: false },
-    { id: '3', name: 'Lettuce', price: '₱ 25.00', sold: '8 sold', isFavourite: false },
-  ]);
+  const [products, setProducts] = useState([]);
+  const [stores, setStores] = useState([]);
 
-  const shops = [
-    { id: '1', name: 'Fresh Farm', location: 'Rosario St.' },
-    { id: '2', name: 'Veggie Delight', location: 'Corrales Ave.' },
-    { id: '3', name: 'Fruit Basket', location: 'Carmen Market' },
-    { id: '4', name: 'Green Shop', location: 'Limketkai Center' },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch products
+        const productsRef = collection(db, 'products');
+        const productsSnapshot = await getDocs(productsRef);
+        const productsList = productsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setProducts(productsList);
 
-  const filteredProducts = products.filter((product) =>
+        // Fetch store data
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const storeList = [];
+        for (const userDoc of usersSnapshot.docs) {
+          const farmerDetailsRef = collection(db,`users/${userDoc.id}/farmer_details`);
+          const farmerSnapshot = await getDocs(farmerDetailsRef);
+          farmerSnapshot.forEach((farmerDoc) => {
+            storeList.push({
+              id: farmerDoc.id,
+              ...farmerDoc.data(),
+            });
+          });
+        }
+        setStores(storeList);
+
+      } catch (error) {
+        console.error('Error fetching data: ', error);
+        
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredProducts = products.filter((product) => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const toggleFavourite = (product) => {
-    setProducts((prevProducts) =>
-      prevProducts.map((item) =>
-        item.id === product.id ? { ...item, isFavourite: !item.isFavourite } : item
-      )
-    );
-  };
+  const filteredStores = stores.filter((store) =>
+    store.store_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const renderProduct = ({ item }) => (
     <View style={styles.productCard}>
       <TouchableOpacity
         style={styles.favouriteIcon}
         onPress={() => toggleFavourite(item)}
-      >
+      > 
         <Ionicons
           name={item.isFavourite ? 'heart' : 'heart-outline'}
           size={24}
@@ -60,20 +93,54 @@ export default function HomeScreen({ navigation }) {
         <Ionicons name="image-outline" size={50} color="#555" />
       </View>
       <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.productPrice}>{item.price}</Text>
-      <Text style={styles.productSold}>{item.sold}</Text>
+      <Text style={styles.productPrice}>₱ {item.price}</Text>
+      <Text style={styles.productSold}>Stock: {item.stock}</Text>
     </View>
   );
 
-  const renderShop = ({ item }) => (
-    <View style={styles.shopCard}>
+  const renderStore = ({ item }) => (
+    <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('ShopDashboard')}>
       <Ionicons name="storefront-outline" size={40} color="#555" style={styles.shopIcon} />
       <View style={styles.shopDetails}>
-        <Text style={styles.shopName}>{item.name}</Text>
-        <Text style={styles.shopLocation}>{item.location}</Text>
+        <Text style={styles.shopName}>{item.store_name}</Text>
+        <Text style={styles.shopLocation}>{item.store_description}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
+
+  const toggleFavourite = async (product) => {
+    try {
+      const userId = userAuthData.uid; 
+      
+      const favouritesRef = collection(db, `users/${userId}/liked_products`);
+      const productDocRef = doc(favouritesRef, product.id);
+
+      if (product.isFavourite) {
+        await deleteDoc(productDocRef);
+        console.log('Removed from favourites:', product.name);
+
+      } else {
+        await setDoc(productDocRef, {
+          product_id: product.id,
+          name: product.name,
+          category: product.category || 'Uncategorized', // Use default if missing
+          price: product.price,
+          description: product.description || 'No description available',
+          stock: product.stock,
+          liked_at: new Date().toISOString(),
+        });
+        console.log('Added to favourites:', product.name);
+      }
+
+      setProducts((prevProducts) =>
+        prevProducts.map((item) =>
+          item.id === product.id ? { ...item, isFavourite: !item.isFavourite } : item
+        )
+      );
+    } catch (error) {
+      console.error('Error toggling favourite:', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -109,31 +176,37 @@ export default function HomeScreen({ navigation }) {
             onChangeText={setSearchQuery}
           />
         </View>
-
+    
         {/* Content Scrollable View */}
-        <View contentContainerStyle={styles.contentContainer}>
-          {/* Recommended Products */}
-          <Text style={styles.sectionTitle}>Recommended Products</Text>
-          <FlatList
-            data={filteredProducts} 
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.productList}
-          />
+        {loading ? (
+          <View style={styles.loadingWrapper}> 
+            <ActivityIndicator size="large" color="#006400" />
+          </View>
+        ) : (
+          <View contentContainerStyle={styles.contentContainer}>
+            {/* Products */}
+            <Text style={styles.sectionTitle}>Recommended Products</Text>
+            <FlatList
+              data={filteredProducts} 
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.productList}
+            />
 
-          {/* Recommended Shops */}
-          <Text style={styles.sectionTitle}>Recommended Shops</Text>
-          <FlatList
-            data={shops}
-            renderItem={renderShop}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.shopList}
-          />
-        </View>
+            {/* Shops */}
+            <Text style={styles.sectionTitle}>Recommended Shops</Text>
+            <FlatList
+              data={filteredStores}
+              renderItem={renderStore}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.shopList}
+            />
+          </View>
+        )}
 
         {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
@@ -159,6 +232,16 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  loadingWrapper: {
+    position: 'absolute', 
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', 
   },
   topBar: {
     flexDirection: 'row',
@@ -213,7 +296,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     marginVertical: 10,
     marginLeft: 20,
@@ -271,6 +354,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 10,
+    margin: 5,
     marginRight: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
