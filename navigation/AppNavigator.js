@@ -35,6 +35,7 @@ import HelpCenterScreen from '../screens/HelpCenterScreen';
 import TermsAndPoliciesScreen from '../screens/TermsAndPoliciesScreen';
 import SelectPaymentScreen from '../screens/SelectPaymentScreen';
 import ActiveProScreen from '../screens/ActiveProScreen';
+import AddressForm from '../screens/AddressForm';
 
 //Loading Utility
 import Loading from "../screens/utils/Loading";
@@ -54,6 +55,7 @@ const Main = () => {
       <MainStack.Screen name="Cart" component={CartScreen} />
       <MainStack.Screen name="Chat" component={ChatScreen} />
       <MainStack.Screen name="Profile" component={ProfileScreen} />
+      <MainStack.Screen name="AddressForm" component={AddressForm} />
 
       {/* Help Center */}
       <MainStack.Screen name="HelpCenter" component={HelpCenterScreen} />
