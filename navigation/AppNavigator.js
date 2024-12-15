@@ -29,7 +29,9 @@ import TermsAndPoliciesScreen from '../screens/TermsAndPoliciesScreen';
 import OrderListScreen from '../screens/OrderListScreen';
 import AddressScreen from '../screens/AddressScreen';
 import UpdateShopProfileScreen from '../screens/UpdateShopProfileScreen';
-
+import ProductDetailScreen from '../screens/ProductDetailsScreen';
+import OrderCartScreen from '../screens/OrderCartScreen';
+import EditProductScreen from '../screens/EditProductScreen';
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
@@ -46,6 +48,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Favourites" component={FavouritesScreen} />
       <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen name='OrderCart' component={OrderCartScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
 
@@ -63,6 +66,8 @@ export default function AppNavigator() {
       <Stack.Screen name="OrderList" component={OrderListScreen} />
       <Stack.Screen name="AddressShop" component={AddressScreen} />
       <Stack.Screen name="UpdateShopProf" component={UpdateShopProfileScreen} />
+      <Stack.Screen name='ProductDetails' component={ProductDetailScreen} />
+      <Stack.Screen name='EditProduct' component={EditProductScreen} />
 
       {/* Seller Onboarding Screens */}
       <Stack.Screen name="InfoProfile" component={InfomationProfile} />

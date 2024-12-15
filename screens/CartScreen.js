@@ -22,7 +22,7 @@ const CartScreen = ({ navigation }) => {
         <Text style={styles.subText}>You haven’t added anything to your cart!</Text>
 
         {/* Browse Button */}
-        <TouchableOpacity style={styles.browseButton} onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity style={styles.browseButton} onPress={() => navigation.navigate('OrderCart')}>
           <Text style={styles.browseButtonText}>Browse</Text>
         </TouchableOpacity>
       </View>

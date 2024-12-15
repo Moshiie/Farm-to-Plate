@@ -26,7 +26,7 @@ const OrderListScreen = ({ navigation }) => {
           style={styles.shopLogo}
         />
         <View style={styles.shopInfo}>
-          <TouchableOpacity onPress={() => navigation.navigate('ShopDetails')}>
+          <TouchableOpacity onPress={() => navigation.navigate('ShopDetail')}>
             <Text style={styles.shopName}>Shop Name</Text>
           </TouchableOpacity>
           <Text style={styles.shopRating}>⭐ 4.9</Text>

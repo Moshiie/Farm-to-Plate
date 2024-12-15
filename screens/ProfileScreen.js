@@ -57,7 +57,7 @@ const ProfileScreen = () => {
         <Text style={styles.userName}>Juan Dela Cruz</Text>
         <TouchableOpacity
           style={styles.editProfileButton}
-          onPress={() => navigation.navigate('InfoPro')}
+          onPress={() => navigation.navigate('InfoProfile')}
         >
           <Icon name="edit" size={16} color="#fff" style={styles.actionIcon} />
           <Text style={styles.editProfile}>Edit Profile</Text>
