@@ -23,8 +23,8 @@ const SellerRegistrationSuccessScreen = ({ navigation }) => {
       </View>
 
       {/* Button */}
-      <TouchableOpacity style={styles.button} onPress={() => navigation.push('AddProdt')}>
-        <Text style={styles.buttonText}>Go to add product</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.push('ShopDashboard')}>
+        <Text style={styles.buttonText}>Go to Shop Dashboard</Text>
       </TouchableOpacity>
     </View>
   );

@@ -37,6 +37,10 @@ import SelectPaymentScreen from '../screens/SelectPaymentScreen';
 import ActiveProScreen from '../screens/ActiveProScreen';
 import AddressForm from '../screens/AddressForm';
 import MapScreen from '../screens/MapScreen';
+import BuyerShopDashboardScreen from '../screens/BuyerShopDashboardScreen';
+import ProductScreen from '../screens/ProductScreen';
+import BuyerOrderDetailsScreen from '../screens/BuyerOrderDetailsScreen';
+import BuyerOrderListScreen from '../screens/BuyerOrderListScreen';
 
 //Loading Utility
 import Loading from "../screens/utils/Loading";
@@ -68,8 +72,12 @@ const Main = () => {
       {/* Shop Screens */}
       <MainStack.Screen name="Shop" component={ShopScreen} />
       <MainStack.Screen name="ShopDashboard" component={ShopDashboardScreen} />
+      <MainStack.Screen name="BuyerShopDashboard" component={BuyerShopDashboardScreen} />
+      <MainStack.Screen name="Product" component={ProductScreen} />
       <MainStack.Screen name="AddProduct" component={AddProductScreen} />
       <MainStack.Screen name="ProductList" component={ProductListScreen} />
+      <MainStack.Screen name="BuyerOrderDetails" component={BuyerOrderDetailsScreen} />
+      <MainStack.Screen name="BuyerOrderList" component={BuyerOrderListScreen} />
       <MainStack.Screen name="OrderList" component={OrderListScreen} />
       <MainStack.Screen name="Addresses" component={AddressScreen} />
       <MainStack.Screen name="UpdateShopProfile" component={UpdateShopProfileScreen} />

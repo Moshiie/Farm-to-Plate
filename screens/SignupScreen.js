@@ -44,13 +44,17 @@ export default function SignupScreen({ navigation }) {
       await setDoc(doc(db, 'users', user.uid), {
         email: email,
         role: 'buyer',
+        subscription: {
+          expiry_date: null,
+          plan_id: 'Free',
+        },
         created_at: new Date(),
         uid: user.uid
       });
 
       console.log('User signed up:', user.uid);
 
-      //Store user data in context
+      //Store userData in context to be able acccess globally
       setUserData({ email: user.email, role: user.role, uid: user.uid }); 
       
       setModalVisible(true);
@@ -86,7 +90,6 @@ export default function SignupScreen({ navigation }) {
 
   const handleContinue = () => {
     closeModal();
-    navigation.navigate('Login');
   };
 
   const animatedModalStyle = {

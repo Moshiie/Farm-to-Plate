@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,34 +9,42 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
-import * as ImagePicker from 'expo-image-picker'; // Expo Image Picker for photo upload
+import { AuthContext } from '../providers/AuthProvider';
+import * as ImagePicker from 'expo-image-picker'; 
 
-const SetUpShopScreen = () => {
-  const [shopData, setShopData] = useState({
-    description: '',
-    shopPhoto: null, // To store selected photo URI
-  });
+const SetUpShopScreen = ({ navigation }) => {
 
-  const navigation = useNavigation(); // Initialize navigation
+  const { shopSetupData, setShopSetupData } = useContext(AuthContext);  
 
-  const handleSetupShop = () => {
-    Alert.alert('Success', 'Shop Set Up Successfully!', [{ text: 'OK' }]);
-    console.log(shopData);
-  };
+  const handleNext = () => {
+    if (!shopSetupData.store_description || !shopSetupData.store_photo) {
+      Alert.alert('Incomplete', 'Please fill out all fields before proceeding.');
+      return;
+    }
+
+    navigation.navigate('ShopInfo');
+  }; 
 
   const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Permission to access the photo library is required.');
+      return;
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
 
+    console.log(result);
+
     if (!result.cancelled) {
-      setShopData((prevState) => ({
-        ...prevState,
-        shopPhoto: result.uri,
+      setShopSetupData((prev) => ({
+        ...prev,
+        store_photo: result.assets[0].uri,
       }));
     }
   };
@@ -48,8 +56,8 @@ const SetUpShopScreen = () => {
 
         {/* Shop Photo Section */}
         <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
-          {shopData.shopPhoto ? (
-            <Image source={{ uri: shopData.shopPhoto }} style={styles.imagePreview} />
+          {shopSetupData.store_photo ? (
+            <Image source={{ uri: shopSetupData.store_photo }} style={styles.imagePreview} />
           ) : (
             <Text style={styles.plusIcon}>+</Text>
           )}
@@ -60,20 +68,20 @@ const SetUpShopScreen = () => {
         <Text style={styles.label}>Shop Description</Text>
         <TextInput
           style={styles.descriptionInput}
-          onChangeText={(text) => setShopData({ ...shopData, description: text })}
-          value={shopData.description}
+          onChangeText={(text) => 
+            setShopSetupData((prev) => ({ ...prev, store_description: text }))
+          }
+          value={shopSetupData.store_description}
           placeholder="Enter shop description"
           multiline
           maxLength={300}
         />
-        <Text style={styles.charCount}>{shopData.description.length}/300</Text>
+        <Text style={styles.charCount}>{shopSetupData.store_description.length}/300</Text>
 
         {/* Save Button */}
         <TouchableOpacity
           style={styles.button}
-          onPress={() => {;
-         navigation.navigate('ShopInfo'); // Navigate to the 'ShopInfo' screen
-          }}
+          onPress={handleNext}
         >
           <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
@@ -112,8 +120,8 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   photoButton: {
-    width: 100,
-    height: 100,
+    width: 160,
+    height: 120,
     borderWidth: 2,
     borderColor: '#ddd',
     borderRadius: 10,
@@ -157,8 +165,8 @@ const styles = StyleSheet.create({
     marginBottom: 20, // Added margin for spacing before the button
   },
   imagePreview: {
-    width: 100,
-    height: 100,
+    width: 160,
+    height: 120,
     borderRadius: 10,
   },
   button: {

@@ -25,7 +25,7 @@ const ShopDashboardScreen = ({navigation}) => {
 
       {/* Feature Buttons */}
       <View style={styles.featureButtonsContainer}>
-        <TouchableOpacity style={styles.featureButton}>
+        <TouchableOpacity style={styles.featureButton} onPress={() => navigation.navigate('ProductList')}>
           <MaterialIcons name="inventory" size={24} color="#2E4C2D" />
           <Text style={styles.featureButtonText}>Products</Text>
         </TouchableOpacity>

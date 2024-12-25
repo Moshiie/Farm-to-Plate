@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -7,23 +7,134 @@ import {
   StyleSheet,
   Image,
   ScrollView,
+  Alert,
 } from 'react-native';
+import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
+import { AuthContext } from '../providers/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system'; 
 
-const AddProductScreen = ({ navigation }) => {
+const AddProductScreen = ({ navigation, route }) => {
+
+  const { userData } = useContext(AuthContext);
+  const { product, isEdit } = route.params || {};
+
   const [productName, setProductName] = useState('');
   const [category, setCategory] = useState('');
-  const [pieces, setPieces] = useState('');
+  const [price, setPrice] = useState('');
+  const [stock, setStock] = useState('');
   const [description, setDescription] = useState('');
+  const [productImage, setProductImage] = useState('');
 
-  const handleSaveAndPublish = () => {
-    // Logic for saving and publishing the product
-    console.log({
-      productName,
-      category,
-      pieces,
-      description,
+  useEffect(() => {
+    if (isEdit) {
+      setProductName(product.name);
+      setCategory(product.category);
+      setPrice(product.price);
+      setStock(product.stock);
+      setDescription(product.description);
+      setProductImage(product.product_image);
+    }
+  }, [isEdit, product]);
+
+  const handleImageUpload = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Media access is required to upload an image.');
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [3, 3],
+      quality: 1,
     });
+
+    console.log(result);
+
+    if (!result.canceled) { 
+      const uri = result.assets[0].uri;
+      console.log(uri);
+      const filename = uri.split('/').pop();
+      console.log(filename);
+      const timestamp = new Date().toISOString();
+      console.log(timestamp);
+      const fileExtension = filename.split('.').pop();
+      console.log(fileExtension);
+      const newFilename = `avatar_${timestamp}.${fileExtension}`; 
+      console.log(newFilename);
+      // Save the image to the product_images folder (in a local subdirectory)
+      const assetPath = FileSystem.documentDirectory + 'product_images/' + newFilename;
+      console.log(assetPath);
+      
+      try {
+        await FileSystem.copyAsync({
+          from: uri,
+          to: assetPath,
+        });
+
+        console.log(' im here')
+        
+        setProductImage(assetPath);
+
+        console.log("Product Image updated in state:", assetPath);
+  
+      } catch (error) {
+        console.error('Error uploading image: ', error.message);
+        Alert.alert("An error occurred while uploading the image.");
+      }
+    }
+  };
+
+  const handleSaveAndPublish = async () => {
+    if (productImage && productName && category && price && stock && description) {
+
+      try {
+        if (isEdit) {
+          const productRef = doc(db, 'products', product.id);
+          await updateDoc(productRef, {
+            name: productName,
+            category: category,
+            price: price,
+            stock: stock,
+            description: description,
+            product_image: productImage,
+          });
+          Alert.alert('Success', 'Product updated successfully.');
+          navigation.goBack();
+
+        } else {
+          const productRef = collection(db, 'products');  
+          await addDoc(productRef, {
+            name: productName,
+            category: category,
+            price,
+            stock,
+            description,
+            product_image: productImage,  // Store local image filepath here
+            farmer_id: userData.uid,
+            discount_active: false,
+            discount_price: 0,
+            product_status: 'active',
+            likes_count: 0,
+            created_at: Date.now(),
+          });
+          console.log('Product saved successfully');
+          Alert.alert('Success', 'Product added successfully!');
+          navigation.push('ProductList'); 
+        }
+
+      } catch (error) {
+        console.error('Error saving product: ', error);
+        Alert.alert('Error', 'Failed to save the product.');
+      }
+    } else {
+      Alert.alert('Missing Data', 'Please complete all fields before submitting.');
+    }
   };
 
   const handleGoBack = () => {
@@ -43,10 +154,10 @@ const AddProductScreen = ({ navigation }) => {
       {/* Product Images Section */}
       <View style={styles.imageContainer}>
         <Text style={styles.sectionLabel}>Product Images</Text>
-        <TouchableOpacity style={styles.imageUploadButton}>
+        <TouchableOpacity style={styles.imageUploadButton} onPress={handleImageUpload}>
           <Image
             source={{
-              uri: 'https://via.placeholder.com/100', // Placeholder image
+              uri: productImage ? productImage : 'https://via.placeholder.com/100', 
             }}
             style={styles.image}
           />
@@ -62,10 +173,21 @@ const AddProductScreen = ({ navigation }) => {
           style={styles.input}
           value={productName}
           onChangeText={setProductName}
-          placeholder="Input"
+          placeholder="Product Name"
           maxLength={100}
         />
         <Text style={styles.charCount}>{productName.length}/100</Text>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Price</Text>
+        <TextInput
+          style={styles.input}
+          value={price}
+          onChangeText={setPrice}
+          placeholder="Price"
+          keyboardType="numeric"
+        />
       </View>
 
       <View style={styles.inputContainer}>
@@ -81,11 +203,11 @@ const AddProductScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Pieces</Text>
+        <Text style={styles.inputLabel}>Stock</Text>
         <TextInput
           style={styles.input}
-          value={pieces}
-          onChangeText={setPieces}
+          value={stock}
+          onChangeText={setStock}
           placeholder="Input"
           keyboardType="numeric"
         />
@@ -105,7 +227,7 @@ const AddProductScreen = ({ navigation }) => {
       </View>
 
       {/* Save and Publish Button */}
-      <TouchableOpacity style={styles.saveButton} onPress={() => navigation.push('ProductList')}>
+      <TouchableOpacity style={styles.saveButton} onPress={handleSaveAndPublish}>
         <Text style={styles.saveButtonText}>Save and Publish</Text>
       </TouchableOpacity>
     </ScrollView>

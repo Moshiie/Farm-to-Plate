@@ -162,7 +162,7 @@ export default function FavouritesScreen({ navigation }) {
           />
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons name="heart-outline" size={100} color="#4CAF50" style={styles.emptyIcon} />
+            <Ionicons name="heart" size={100} color="#4CAF50" style={styles.emptyIcon} />
             <Text style={styles.heading}>No favourites saved</Text>
             <Text style={styles.subText}>
               To make ordering even faster, you’ll find all your faves here. Just look for the heart icon!

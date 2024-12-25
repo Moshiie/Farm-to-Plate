@@ -8,17 +8,14 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 
-const BusinessInformationScreen = () => {
+const BusinessInformationScreen = ({ navigation }) => {
   const [sellerType, setSellerType] = React.useState('Sole Proprietorship');
   const [vatStatus, setVatStatus] = React.useState('VAT Registered');
-  const navigation = useNavigation();
 
   const handleSubmit = () => {
     Alert.alert('Success', 'Business Information Saved Successfully!');
-    // You can navigate to another screen here if needed
-    // navigation.navigate('NextScreen');
+    navigation.navigate('RegistrationSuccess');
   };
 
   return (
@@ -102,7 +99,7 @@ const BusinessInformationScreen = () => {
           <TouchableOpacity style={[styles.button, styles.backButton]} onPress={() => navigation.goBack()}>
             <Text style={styles.buttonText}>Back</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.submitButton]} onPress={() => navigation.push('SelRegSuc')}>
+          <TouchableOpacity style={[styles.button, styles.submitButton]} onPress={handleSubmit}>
             <Text style={styles.buttonText}>Submit</Text>
           </TouchableOpacity>
         </View>

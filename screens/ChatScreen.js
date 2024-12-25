@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function ChatScreen() {
+export default function ChatScreen({ navigation }) {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [currentUser, setCurrentUser] = useState(1); // Toggle between two users
@@ -27,11 +27,20 @@ export default function ChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'} // Adjusts the view when the keyboard is visible
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // Offset for iOS
     >
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Chat</Text>
+      </View>
+
       <FlatList
         data={messages}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 80 }} // Space for the input field
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 10 }} // Space for the input field
         style={styles.chatList}
         // Removed ListFooterComponent to avoid nesting issues
       />
@@ -54,8 +63,27 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
     backgroundColor: '#C8D6C5',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2E4C2D',
+    paddingHorizontal: 15,
+    paddingVertical: 20,
+    position: 'relative',
+  },
+  headerButton: {
+    padding: 5,
+    left: 0,
+    position: 'absolute'
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#FFF',
   },
   chatList: {
     flex: 1,

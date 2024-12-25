@@ -10,8 +10,7 @@ const UpdateShopProfileScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#2E4C2D" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Update Shop Profile</Text>
-        <Text style={{ width: 24 }}>{''}</Text> {/* Replacing placeholder */}
+        <Text style={styles.headerTitle}>Update Shop Profile</Text> 
       </View>
 
       {/* Change Cover Photo Section */}

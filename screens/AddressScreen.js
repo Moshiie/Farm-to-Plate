@@ -5,23 +5,24 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert 
 } from 'react-native';
 import { AuthContext } from '../providers/AuthProvider';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, getDoc, updateDoc, doc, query, where, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
 const AddressScreen = ({ navigation }) => {
   
-  const { userAuthData } = useContext(AuthContext);
+  const { userAuthData, userData, setUserData } = useContext(AuthContext);
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAddresses = async () => {
     try {
-      const userId = userAuthData.uid;
+      const userId = userData.uid;
       const userAddressesRef = collection(db, `users/${userId}/addresses`);
       const querySnapshot = await getDocs(userAddressesRef);
 
@@ -40,18 +41,81 @@ const AddressScreen = ({ navigation }) => {
     }
   };
 
-  const setDefaultAddress = async (addressId) => {
+  const fetchUserData = async () => {
     try {
-      const userId = userAuthData.uid;
+      const userId = userData.uid;
+      const userDocRef = doc(db, 'users', userId);
+      const docSnapShot = await getDoc(userDocRef);
+
+      // Check if the document exists
+      if (docSnapShot.exists()) { 
+        const userData = { id: docSnapShot.id, ...docSnapShot.data() };
+        setUserData(userData); 
+        console.log('User Document:', userData);
+      }
+      
+      console.log(userData);
+      
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateFarmerDetails = async (defaultAddress) => {
+    try {
+      const farmerDetailsRef = collection(db, `users/${userData.uid}/farmer_details`);
+      const farmerQuery = query(farmerDetailsRef, where('email', '==', userData.email));
+      const farmerDetailsSnapshot = await getDocs(farmerQuery);
+
+      if (!farmerDetailsSnapshot.empty) {
+        const farmerDoc = farmerDetailsSnapshot.docs[0]; // Assuming email is unique
+        const farmerDocRef = doc(db, `users/${userData.uid}/farmer_details`, farmerDoc.id);
+
+        await updateDoc(farmerDocRef, {
+          default_pickup_address: defaultAddress,
+        });
+      }
+
+    } catch (error) {
+      console.error('Error updating farmer details:', error);
+    }
+  };
+
+  const setDefaultAddress = async (addressId, addressType) => {
+    try {
+      const userId = userData.uid;
 
       // Reset all other addresses to `isdefault: false`
-      const updates = addresses.map(address =>
-        updateDoc(doc(db, `users/${userId}/addresses`, address.id), {
-          isdefault: address.id === addressId,
-        })
-      );
-
+      const updates = addresses
+        .filter(address => address.address_type === addressType)
+        .map(address =>
+          updateDoc(doc(db, `users/${userId}/addresses`, address.id), {
+            isdefault: address.id === addressId,
+          })
+        );
+        
       await Promise.all(updates);
+
+      const newDefaultAddress = addresses.find(address => address.id === addressId);
+
+      if (addressType === 'pickup' && newDefaultAddress) {
+        const defaultAddress = {
+          id: newDefaultAddress.id,
+          name: newDefaultAddress.name,
+          phone_number: newDefaultAddress.phone_number,
+          address_line_1: newDefaultAddress.address_line_1,
+          barangay: newDefaultAddress.barangay,
+          city: newDefaultAddress.city,
+          zip_code: newDefaultAddress.zip_code,
+          address_type: newDefaultAddress.address_type,
+          region: newDefaultAddress.region,
+        };
+
+        await updateFarmerDetails(defaultAddress);
+      }
 
       fetchAddresses();
 
@@ -60,8 +124,30 @@ const AddressScreen = ({ navigation }) => {
     }
   };
 
+  const deleteAddress = async (addressId) => {
+    try {
+      const userId = userData.uid;
+      await deleteDoc(doc(db, `users/${userId}/addresses`, addressId));
+      setAddresses(prevAddresses => prevAddresses.filter(address => address.id !== addressId));
+    } catch (error) {
+      console.error('Error deleting address:', error);
+    }
+  };
+
+  const confirmDeleteAddress = (addressId) => {
+    Alert.alert(
+      'Delete Address',
+      'Are you sure you want to delete this address?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteAddress(addressId) }
+      ]
+    );
+  };
+
   useEffect(() => {
     fetchAddresses();
+    fetchUserData();
   }, [userAuthData]);
 
   useFocusEffect(
@@ -100,11 +186,11 @@ const AddressScreen = ({ navigation }) => {
               <View style={styles.detailTextContainer}>
                 <View style={styles.titleRow}>
                   <Text style={styles.detailText}>{address.name}</Text>
-                  <Text style={styles.typeText}>({address.address_type})</Text>
+                  <Text style={styles.typeText}>Type: ({address.address_type})</Text>
                 </View>
-                <Text style={styles.subText}>{address.phone_number}</Text>
+                <Text style={styles.subText}>Phone: {address.phone_number}</Text>
                 <Text style={styles.subText}>
-                  {address.address_line_1}, {address.barangay}, {address.city}, {address.zip_code}
+                  Address: {address.address_line_1}, {address.barangay}, {address.city}, {address.zip_code}
                 </Text>
                 {address.isdefault && <Text style={styles.defaultBadge}>Default</Text>}
               </View>
@@ -118,11 +204,17 @@ const AddressScreen = ({ navigation }) => {
                 {!address.isdefault && (
                   <TouchableOpacity
                     style={styles.defaultButton}
-                    onPress={() => setDefaultAddress(address.id)}
+                    onPress={() => setDefaultAddress(address.id, address.address_type)}
                   >
                     <Text style={styles.defaultText}>Set as Default</Text>
                   </TouchableOpacity>
                 )}
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => confirmDeleteAddress(address.id)}
+                >
+                  <Text style={styles.deleteText}>Delete</Text>
+                </TouchableOpacity>
               </View>
             </View>
           ))
@@ -139,6 +231,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#C8D6C5', // Light green for the background
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -187,6 +284,15 @@ const styles = StyleSheet.create({
   },
   editText: {
     color: '#2E4C2D',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  deleteButton: {
+    alignItems: 'flex-end',
+    marginTop: 5,
+  },
+  deleteText: {
+    color: '#FF3B3B',
     fontWeight: 'bold',
     fontSize: 14,
   },

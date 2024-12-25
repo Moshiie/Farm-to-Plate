@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,21 +8,85 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { db } from '../firebaseConfig';
+import { doc, updateDoc, collection, addDoc } from 'firebase/firestore';
+import { AuthContext } from '../providers/AuthProvider'; 
 
-const ShopInformationScreen = () => {
+const ShopInformationScreen = ({ route, navigation }) => {
+
+  const { addressData, addressSet } = route.params || {};
+  const { shopSetupData, setShopSetupData, userData } = useContext(AuthContext);
+
   const [shopInfo, setShopInfo] = useState({
-    shopName: '',
-    pickupAddress: '',
-    email: '',
-    phone: '',
-  });
+    shopName: shopSetupData?.shopName || '',
+    pickupAddress: shopSetupData?.pickupAddress || {},
+    email: userData?.email || '',
+    phone: shopSetupData?.phone || '',
+  }); 
 
-  const navigation = useNavigation();
+  useEffect(() => {
+    if (addressData && addressSet) {
+      setShopInfo((prevState) => ({
+        ...prevState,
+        pickupAddress: addressData, // Update pickupAddress with the selected address data
+      }));
+      console.log('Updated shopInfo:', shopInfo);
+    }
+  }, [addressData, addressSet]);
 
-  const handleSave = () => {
-    Alert.alert('Success', 'Shop Information Saved!', [{ text: 'OK' }]);
-    console.log(shopInfo);
+  const handleSubmit = async () => {
+
+    if (!shopInfo.shopName || !shopInfo.pickupAddress || !shopInfo.email || !shopInfo.phone) {
+      Alert.alert('Error', 'Please fill in all required fields!');
+      return;
+    }
+
+    const updatedShopSetupData = {
+      store_description: shopSetupData.store_description,
+      store_photo: shopSetupData.store_photo,
+      store_name: shopInfo.shopName,
+      default_pickup_address: shopInfo.pickupAddress,
+      email: shopInfo.email,
+      phone_number: shopInfo.phone,
+      approval_status: 'approved',
+      farmer_id: userData.uid,
+    };
+
+    try {
+      const userId = userData?.uid;
+      
+      if (!userId) {
+        Alert.alert('Error', 'User not found.');
+        return;
+      }
+
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, { role: 'farmer' });
+      
+      const userAddressRef = collection(db, 'users', userId, 'addresses');
+      const newDocRef = await addDoc(userAddressRef, shopInfo.pickupAddress);
+
+      const updatedPickupAddress = {
+        ...shopInfo.pickupAddress,
+        id: newDocRef.id,  // Add the document ID as 'id' in pickupAddress.
+      };
+
+      updatedShopSetupData.default_pickup_address = updatedPickupAddress;
+
+      const farmerDetailsRef = collection(db, 'users', userId, 'farmer_details');
+      await addDoc(farmerDetailsRef, updatedShopSetupData); 
+
+      setShopSetupData({ 
+        ...shopSetupData, 
+        updatedShopSetupData
+      });
+
+      navigation.navigate('RegistrationSuccess');
+
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+      console.error(error);
+    }
   };
 
   return (
@@ -44,21 +108,25 @@ const ShopInformationScreen = () => {
         </View>
 
         {/* Pickup Address */}
-        <Text style={styles.label}>Pickup Address *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter pickup address"
-          onChangeText={(text) => setShopInfo({ ...shopInfo, pickupAddress: text })}
-          value={shopInfo.pickupAddress}
-        />
+        <Text style={styles.label}>Address *</Text>
+        <TouchableOpacity 
+          style={styles.inputButton}
+          onPress={() =>
+            navigation.navigate('AddressForm', { allowedType: 'pickup', settingUpShopInfo: true })
+          }
+        >
+          <Text style={styles.inputButtonText}>
+            {shopInfo.pickupAddress ? 'Change' : 'Set'}
+          </Text>
+        </TouchableOpacity>
 
         {/* Email */}
         <Text style={styles.label}>Email *</Text>
         <TextInput
-          style={styles.input}
+          style={styles.emailInput}
           placeholder="Enter email"
-          onChangeText={(text) => setShopInfo({ ...shopInfo, email: text })}
           value={shopInfo.email}
+          editable={false}
         />
 
         {/* Phone Number */}
@@ -68,16 +136,15 @@ const ShopInformationScreen = () => {
           placeholder="Enter phone number"
           onChangeText={(text) => setShopInfo({ ...shopInfo, phone: text })}
           value={shopInfo.phone}
+          keyboardType="phone-pad"
         />
 
         {/* Next Button */}
         <TouchableOpacity
           style={styles.nextButton}
-          onPress={() => {
-            navigation.navigate('VerNum');
-          }}
+          onPress={handleSubmit}
         >
-          <Text style={styles.buttonText}>Next</Text>
+          <Text style={styles.buttonText}>Submit</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -134,6 +201,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     fontSize: 14,
     width: '100%',
+  },
+  inputButton: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+    backgroundColor: '#fff',
+  },
+  emailInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    height: 45,
+    marginBottom: 5,
+    backgroundColor: '#f0f0f0', // Light grey background for disabled input
+    fontSize: 14,
+    width: '100%',
+    color: '#666', // Dark grey text to indicate it's disabled
   },
   charCount: {
     fontSize: 12,

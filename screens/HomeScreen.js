@@ -10,7 +10,8 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
-  ActivityIndicator 
+  ActivityIndicator, 
+  Image 
 } from 'react-native';
 import { db } from '../firebaseConfig'; // Import Firestore from your config file
 import { collection, doc, getDocs, setDoc, deleteDoc} from 'firebase/firestore';
@@ -89,18 +90,40 @@ export default function HomeScreen({ navigation }) {
           color={item.isFavourite ? '#E63946' : 'black'}
         />
       </TouchableOpacity>
-      <View style={styles.imagePlaceholder}>
-        <Ionicons name="image-outline" size={50} color="#555" />
-      </View>
+      
+      {item.product_image ? (
+        <Image
+          source={{ uri: item.product_image }}
+          style={styles.productImage}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={styles.imagePlaceholder}>
+          <Ionicons name="image-outline" size={50} color="#555" />
+        </View>
+      )}
       <Text style={styles.productName}>{item.name}</Text>
       <Text style={styles.productPrice}>₱ {item.price}</Text>
       <Text style={styles.productSold}>Stock: {item.stock}</Text>
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('Product', { product: item })}
+      >
+        <Text style={styles.productDetailsLink}>View Details</Text>
+      </TouchableOpacity>
     </View>
   );
 
   const renderStore = ({ item }) => (
-    <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('ShopDashboard')}>
-      <Ionicons name="storefront-outline" size={40} color="#555" style={styles.shopIcon} />
+    <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('BuyerShopDashboard', { farmerDetails: item })}>
+      {item.store_photo ? (
+        <Image  
+          source={{ uri: item.store_photo }}
+          style={styles.shopImage}
+          resizeMode="cover"
+        />
+      ) : (
+        <Ionicons name="storefront-outline" size={40} color="#555" style={styles.shopIcon} />
+      )}
       <View style={styles.shopDetails}>
         <Text style={styles.shopName}>{item.store_name}</Text>
         <Text style={styles.shopLocation}>{item.store_description}</Text>

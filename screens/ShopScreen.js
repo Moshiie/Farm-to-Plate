@@ -1,9 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // For navigation
 
-const ShopScreen = () => {
-  const navigation = useNavigation();
+const ShopScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
@@ -18,7 +16,7 @@ const ShopScreen = () => {
       {/* Start Registration Button */}
       <TouchableOpacity
         style={styles.startRegistrationButton}
-        onPress={() => navigation.navigate('SetUp')} // Navigate to registration screen
+        onPress={() => navigation.navigate('SetUpShop')} // Navigate to registration screen
       >
         <Text style={styles.startRegistrationText}>Start Registration</Text>
       </TouchableOpacity>

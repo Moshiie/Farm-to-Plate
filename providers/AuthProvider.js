@@ -12,12 +12,23 @@ const AuthProvider = (props) => {
   const [userData, setUserData] = useState(null);
   const [isFirstLaunch, setIsFirstLaunch] = useState(true);
 
+  const [shopSetupData, setShopSetupData] = useState({
+    store_description: '',
+    store_photo: null,
+    store_name: '',
+    default_pickup_address: {},
+    email: '',
+    phone: '',
+    approval_status: '',
+  });
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       if (u) {
         setUser(true);
         setUserAuthData(u);
         fetchUserData(u.uid); // Fetch corresponding user data from Firestore
+        
       } else {
         setUser(false);
         setUserAuthData(null);
@@ -34,7 +45,7 @@ const AuthProvider = (props) => {
       const docSnap = await getDoc(docRef); 
 
       if (docSnap.exists()) {
-        setUserData(docSnap.data());  // Set user data from Firestore to state
+        setUserData(docSnap.data());  // Set user data from Firestore to state management with Context APIi
 
       } else {
         console.log('No user document found, creating one.');
@@ -62,8 +73,10 @@ const AuthProvider = (props) => {
         userAuthData,
         userData,
         isFirstLaunch,
+        shopSetupData,
         setUserData,
-        setIsFirstLaunch
+        setIsFirstLaunch,
+        setShopSetupData,
       }}
     >
       {props.children}
