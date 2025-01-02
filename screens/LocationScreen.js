@@ -43,7 +43,7 @@ export default function LocationScreen({ navigation }) {
           Alert.alert(
             'Permission Denied',
             'Location permission is required to use this feature. Please enable it in your device settings.',
-            [{ text: 'OK', onPress: () => navigation.goBack() }]
+            [{ text: 'OK', onPress: () => navigation.replace('Banner') }]
           );
           setIsLoading(false);
           return;

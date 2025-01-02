@@ -65,9 +65,6 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>View Products</Text>
-        </TouchableOpacity>
       </ImageBackground>
 
       {/* Products Display */}
