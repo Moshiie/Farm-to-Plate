@@ -26,6 +26,7 @@ export default function HomeScreen({ navigation }) {
 
   const { userData, userAuthData } = useContext(AuthContext);
 
+  const [imageError, setImageError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState([]);
@@ -113,23 +114,27 @@ export default function HomeScreen({ navigation }) {
     </View>
   );
 
-  const renderStore = ({ item }) => (
-    <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('BuyerShopDashboard', { farmerDetails: item })}>
-      {item.store_photo ? (
-        <Image  
-          source={{ uri: item.store_photo }}
-          style={styles.shopImage}
-          resizeMode="cover"
-        />
-      ) : (
-        <Ionicons name="storefront-outline" size={40} color="#555" style={styles.shopIcon} />
-      )}
-      <View style={styles.shopDetails}>
-        <Text style={styles.shopName}>{item.store_name}</Text>
-        <Text style={styles.shopLocation}>{item.store_description}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderStore = ({ item }) => {
+    console.log('Store Photo URL:', item.store_photo);
+    return (
+      <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('BuyerShopDashboard', { farmerDetails: item })}>
+        {item.store_photo && !imageError ? (
+          <Image  
+            source={{ uri: item.store_photo }}
+            style={styles.shopImage}
+            resizeMode="cover"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <Ionicons name="storefront-outline" size={40} color="#555" style={styles.shopIcon} />
+        )}
+        <View style={styles.shopDetails}>
+          <Text style={styles.shopName}>{item.store_name}</Text>
+          <Text style={styles.shopLocation}>{item.store_description}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const toggleFavourite = async (product) => {
     try {
@@ -230,19 +235,6 @@ export default function HomeScreen({ navigation }) {
             />
           </View>
         )}
-
-        {/* Bottom Navigation */}
-        <View style={styles.bottomNav}>
-          <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-            <Ionicons name="home" size={28} color="#7A9F59" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
-            <Ionicons name="chatbubble-outline" size={28} color="#333" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-            <Ionicons name="person-outline" size={28} color="#333" />
-          </TouchableOpacity>
-        </View>
       </LinearGradient>
     </SafeAreaView>
   );
@@ -400,16 +392,5 @@ const styles = StyleSheet.create({
   shopLocation: {
     fontSize: 14,
     color: '#888',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    width: '100%',
-    borderTopColor: '#ccc',
-    borderTopWidth: 1,
-    position: 'absolute',
-    bottom: 0,
   },
 });

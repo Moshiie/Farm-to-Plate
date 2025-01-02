@@ -1,7 +1,9 @@
 import React, { useContext } from 'react';
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AuthContext } from "../providers/AuthProvider";
+import { Ionicons, MaterialCommunityIcons } from 'react-native-vector-icons';
 
 //Auth Screens
 import WelcomeScreen from '../screens/WelcomeScreen';
@@ -45,28 +47,54 @@ import BuyerOrderListScreen from '../screens/BuyerOrderListScreen';
 //Loading Utility
 import Loading from "../screens/utils/Loading";
 
+const Tab = createBottomTabNavigator();
+const BottomTabNavigator = () => {
+  return (
+    <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+            return <Ionicons name={iconName} size={size} color={color} />;
+            
+          } else if (route.name === 'Chat') {
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+            return <Ionicons name={iconName} size={size} color={color} />;
+
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+            return <Ionicons name={iconName} size={size} color={color} />;
+          }
+        },
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Chat" component={ChatScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+};
+
 const MainStack = createStackNavigator();
 const Main = () => {
   return (
     <MainStack.Navigator
-      initialRouteName='Home' 
-      screenOptions={{
-        headerShown: false,
-      }}
+      initialRouteName="BottomTabs"
+      screenOptions={{ headerShown: false }}
     >
       {/* Main App Screens */}
-      <MainStack.Screen name="Home" component={HomeScreen} />
+      <MainStack.Screen name="BottomTabs" component={BottomTabNavigator} />
       <MainStack.Screen name="Favourites" component={FavouritesScreen} />
       <MainStack.Screen name="Cart" component={CartScreen} />
-      <MainStack.Screen name="Chat" component={ChatScreen} />
-      <MainStack.Screen name="Profile" component={ProfileScreen} />
       <MainStack.Screen name="AddressForm" component={AddressForm} />
       <MainStack.Screen name="MapScreen" component={MapScreen} />
 
-      {/* Help Center */}
+      {/* Help Center & Terms and Policies*/}
       <MainStack.Screen name="HelpCenter" component={HelpCenterScreen} />
-
-      {/* Terms and Policies */}
       <MainStack.Screen name="TermsAndPolicies" component={TermsAndPoliciesScreen} />
 
       {/* Shop Screens */}

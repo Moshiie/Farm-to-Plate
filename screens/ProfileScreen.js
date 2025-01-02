@@ -273,19 +273,6 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
-  
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-          <Ionicons name="home-outline" size={28} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
-          <Ionicons name="chatbubble-outline" size={28} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-          <Ionicons name="person" size={28} color="#7A9F59" />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
@@ -310,7 +297,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
     elevation: 5,
     position: 'relative',
-    marginBottom: 15,
   },
   gearButton: {
     position: 'absolute',
@@ -327,7 +313,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     alignItems: 'center',
-    marginBottom: 10,
+    marginVertical: 10,
     elevation: 5,
     borderRadius: 10,
     marginHorizontal: 15,
@@ -436,7 +422,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E63946',
     padding: 15,
     margin: 20,
-    marginBottom: 60,
+    marginBottom: 30,
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -444,17 +430,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    width: '100%',
-    borderTopColor: '#ccc',
-    borderTopWidth: 1,
-    position: 'absolute',
-    bottom: 0,
   },
 });
 
