@@ -1,57 +1,80 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-// Dummy data for messages
-const messages = [
-  { id: '1', user: 'me', text: 'Hey! How are you?' },
-  { id: '2', user: 'John Doe', text: 'I’m good, you?' },
-  { id: '3', user: 'me', text: 'Doing well, thanks!' },
-];
+import { db } from '../firebaseConfig'; // Import Firestore from your config file
+import { collection, query, where, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
 
 const ChatRoomScreen = ({ route, navigation }) => {
   const { chatId, name } = route.params;
   const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([]);
 
-  const sendMessage = () => {
+  // Real-time listener for messages in a specific chat room
+  useEffect(() => {
+    const messagesRef = collection(db, 'chat_rooms', chatId, 'messages');
+    const q = query(messagesRef, orderBy('createdAt', 'asc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMessages(messagesData);
+    });
+
+    // Cleanup the listener when the screen is unmounted
+    return () => unsubscribe();
+  }, [chatId]);
+
+  // Send a new message
+  const sendMessage = async () => {
     if (message.trim()) {
-      // Here you can send the message or update the chat state
-      console.log('Send message:', message);
-      setMessage(''); // Clear the input field
+      try {
+        const newMessage = {
+          text: message,
+          createdAt: new Date(),
+          senderId: 'buyer', // Dynamically set based on the current user role
+        };
+        await addDoc(collection(db, 'chat_rooms', chatId, 'messages'), newMessage);
+        setMessage(''); // Clear the input field
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
     }
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={20} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.chatHeader}>Chat with {name}</Text>
       </View>
       <FlatList
         data={messages}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={[styles.messageContainer, item.user === 'me' && styles.myMessage]}>
-            <Text style={[styles.messageText, item.user === 'me' && styles.myMessageText]}>
+          <View style={[styles.messageContainer, item.senderId === 'buyer' ? styles.myMessage : styles.theirMessage]}>
+            <Text style={[styles.messageText, item.senderId === 'buyer' ? styles.myMessageText : styles.theirMessageText]}>
               {item.text}
             </Text>
           </View>
         )}
+        inverted={false}  // Remove inversion so messages start from the top
       />
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Type a message"
+          placeholder="Type a message..."
           value={message}
           onChangeText={setMessage}
         />
         <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-          <Text style={styles.sendText}>Send</Text>
+          <Ionicons name="send" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -59,62 +82,74 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#e6f7f1',
-    padding: 10,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    paddingHorizontal: 15,
+    marginBottom: 10,
+    backgroundColor: '#66b366', // Green header
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#4d734d',
   },
   backButton: {
     padding: 5,
   },
   chatHeader: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#4d734d',
-    marginLeft: 5,
+    color: '#fff',  // White header text
+    marginLeft: 15,
   },
   messageContainer: {
     backgroundColor: '#d1e8d1',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    maxWidth: '80%',
   },
   myMessage: {
-    backgroundColor: '#66b366',
+    backgroundColor: '#66b366', // Green for buyer's message
     alignSelf: 'flex-end',
+  },
+  theirMessage: {
+    backgroundColor: '#a1d18d', // Lighter green for the farmer's message
+    alignSelf: 'flex-start',
   },
   messageText: {
     color: '#333',
-    fontSize: 14,
+    fontSize: 16,
+    lineHeight: 22,
   },
   myMessageText: {
     color: '#fff',
   },
+  theirMessageText: {
+    color: '#333',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
+    paddingHorizontal: 15,
     paddingVertical: 10,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#66b366', // Green border for the input area
   },
   input: {
     flex: 1,
+    height: 45,
     padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    fontSize: 16,
+    backgroundColor: '#f1f1f1',
+    borderRadius: 25,
     marginRight: 10,
   },
   sendButton: {
     backgroundColor: '#66b366',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  sendText: {
-    color: '#fff',
-    fontSize: 16,
+    borderRadius: 50,
+    padding: 10,
   },
 });
 

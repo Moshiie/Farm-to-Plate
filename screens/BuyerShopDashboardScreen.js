@@ -2,13 +2,14 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ImageBackground, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { db } from '../firebaseConfig'; // Import Firestore from your config file
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { AuthContext } from '../providers/AuthProvider';
+import { collection, getDocs, query, where, setDoc, doc } from 'firebase/firestore';
+import { AuthContext } from '../providers/AuthProvider'; // Assumed import for user context (add this if you manage auth)
 
 const BuyerShopDashboardScreen = ({ navigation, route }) => {
   const [farmerProducts, setFarmerProducts] = useState([]);
   const [storeInfo, setStoreInfo] = useState(route.params?.farmerDetails);
   const [loading, setLoading] = useState(true);
+  const { userAuthData } = useContext(AuthContext); // Get user info from the AuthContext
 
   useEffect(() => {
     setLoading(true);
@@ -39,7 +40,41 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
     };
 
     fetchData();
-  }, []);
+  }, [storeInfo]);
+
+  const handleCreateChatRoom = async () => {
+    const buyerId = userAuthData?.uid; // Assume userAuthData contains the logged-in user's UID
+    const farmerId = storeInfo?.farmer_id;
+
+    if (!buyerId || !farmerId) return;
+
+    const chatRef = collection(db, 'chat_rooms');
+    const chatQuery = query(
+      chatRef, 
+      where('buyer_id', '==', buyerId),
+      where('farmer_id', '==', farmerId)
+    );
+
+    const chatSnapshot = await getDocs(chatQuery);
+    
+    if (chatSnapshot.empty) {
+      // If no chat room exists, create one
+      const newChatRef = doc(chatRef);
+      await setDoc(newChatRef, {
+        buyer_id: buyerId,
+        farmer_id: farmerId,
+        createdAt: new Date(),
+        status: 'active',
+      });
+
+      // Navigate to the newly created chat room
+      navigation.navigate('ChatRoom', { chatId: newChatRef.id, name: storeInfo.store_name });
+    } else {
+      // If chat room exists, navigate to the existing chat
+      const existingChat = chatSnapshot.docs[0].data();
+      navigation.navigate('ChatRoom', { chatId: chatSnapshot.docs[0].id, name: storeInfo.store_name });
+    }
+  };
 
   const renderProduct = (item) => (
     <View style={styles.productCard} key={item.id}>
@@ -58,7 +93,7 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
         <View style={styles.header}>
           <Text style={styles.shopName}>{storeInfo.store_name}</Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate('ChatRoom', { storeInfo })}
+            onPress={handleCreateChatRoom}
             style={styles.chatIconContainer}
           >
             <MaterialIcons name="chat" size={24} color="#FFF" />
@@ -79,7 +114,6 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
           <Text style={styles.loadingText}>Loading products...</Text>
         </View>
       ) : (
-        // Products Display
         <View style={styles.productListContainer}>
           {farmerProducts.length > 0 ? (
             farmerProducts.map(renderProduct)
