@@ -139,9 +139,8 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   sectionContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    marginTop: 30, 
+    paddingHorizontal: 20, 
+    marginTop: 20, 
   },
   sectionTitle: {
     fontSize: 22,
@@ -205,6 +204,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
+    marginBottom: 30,
   },
   selectPlanText: {
     fontSize: 16,

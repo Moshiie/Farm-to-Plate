@@ -115,7 +115,6 @@ export default function HomeScreen({ navigation }) {
   );
 
   const renderStore = ({ item }) => {
-    console.log('Store Photo URL:', item.store_photo);
     return (
       <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('BuyerShopDashboard', { farmerDetails: item })}>
         {item.store_photo && !imageError ? (

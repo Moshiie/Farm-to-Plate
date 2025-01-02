@@ -176,19 +176,6 @@ export default function FavouritesScreen({ navigation }) {
           </View>
         )}
       </View>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-          <Ionicons name="home-outline" size={28} color="#4CAF50" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
-          <Ionicons name="chatbubble-outline" size={28} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-          <Ionicons name="person-outline" size={28} color="#333" />
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -301,13 +288,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    backgroundColor: '#fff',
   },
 });

@@ -160,7 +160,7 @@ const ProductScreen = ({ route, navigation }) => {
       total_amount: totalAmount,
       voucher_applied: voucher ? voucher.name : null, 
       voucher_discount: voucher ? voucher.discount_amount : 0,
-      status: 'Pending', // Example status, you can add more
+      status: 'Processing', // Example status, you can add more
     };
 
     try {

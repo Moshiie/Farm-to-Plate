@@ -18,6 +18,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import FavouritesScreen from '../screens/FavouritesScreen';
 import CartScreen from '../screens/CartScreen';
 import ChatScreen from '../screens/ChatScreen';
+import ChatRoomScreen from '../screens/ChatRoomScreen';
 import ShopScreen from '../screens/ShopScreen';
 import SetUpShopScreen from '../screens/SetUpShopScreen';
 import BusinessInformationScreen from '../screens/BusinessInformationScreen'; 
@@ -28,6 +29,7 @@ import InformationProfile from '../screens/InformationProfile';
 import AddProductScreen from '../screens/AddProductScreen';
 import AddressScreen from '../screens/AddressScreen';
 import OrderListScreen from '../screens/OrderListScreen';
+import OrderDetailsScreen from '../screens/OrderDetails';
 import ProductListScreen from '../screens/ProductListScreen';
 import ShopDashboardScreen from '../screens/ShopDashboardScreen';
 import UpdateShopProfileScreen from '../screens/UpdateShopProfileScreen'; 
@@ -60,7 +62,7 @@ const BottomTabNavigator = () => {
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
             return <Ionicons name={iconName} size={size} color={color} />;
-            
+
           } else if (route.name === 'Chat') {
             iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
             return <Ionicons name={iconName} size={size} color={color} />;
@@ -89,6 +91,7 @@ const Main = () => {
       {/* Main App Screens */}
       <MainStack.Screen name="BottomTabs" component={BottomTabNavigator} />
       <MainStack.Screen name="Favourites" component={FavouritesScreen} />
+      <MainStack.Screen name="ChatRoom" component={ChatRoomScreen} />
       <MainStack.Screen name="Cart" component={CartScreen} />
       <MainStack.Screen name="AddressForm" component={AddressForm} />
       <MainStack.Screen name="MapScreen" component={MapScreen} />
@@ -107,6 +110,7 @@ const Main = () => {
       <MainStack.Screen name="BuyerOrderDetails" component={BuyerOrderDetailsScreen} />
       <MainStack.Screen name="BuyerOrderList" component={BuyerOrderListScreen} />
       <MainStack.Screen name="OrderList" component={OrderListScreen} />
+      <MainStack.Screen name="OrderDetails" component={OrderDetailsScreen} />
       <MainStack.Screen name="Addresses" component={AddressScreen} />
       <MainStack.Screen name="UpdateShopProfile" component={UpdateShopProfileScreen} />
 

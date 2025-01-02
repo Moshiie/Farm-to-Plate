@@ -6,7 +6,6 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { AuthContext } from '../providers/AuthProvider';
 
 const BuyerShopDashboardScreen = ({ navigation, route }) => {
-  
   const [farmerProducts, setFarmerProducts] = useState([]);
   const [storeInfo, setStoreInfo] = useState(route.params?.farmerDetails);
   const [loading, setLoading] = useState(true);
@@ -58,6 +57,12 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
       {storeInfo && (
         <View style={styles.header}>
           <Text style={styles.shopName}>{storeInfo.store_name}</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ChatRoom', { storeInfo })}
+            style={styles.chatIconContainer}
+          >
+            <MaterialIcons name="chat" size={24} color="#FFF" />
+          </TouchableOpacity>
         </View>
       )}
       <ImageBackground
@@ -93,30 +98,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F4F0',
   },
   header: {
-    padding: 15,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
     backgroundColor: '#2E4C2D',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',  
   },
   shopName: {
     color: '#FFF',
     fontSize: 20,
     fontWeight: 'bold',
+    flexShrink: 1
+  },
+  chatIconContainer: {
+    padding: 5, 
   },
   backgroundImage: {
     height: 150,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  addButton: {
-    backgroundColor: '#2E4C2D',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  addButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   productListContainer: {
     paddingHorizontal: 20,
