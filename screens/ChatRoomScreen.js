@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '../firebaseConfig'; 
-import { collection, query, orderBy, onSnapshot, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, doc, getDoc, updateDoc, where, getDocs } from 'firebase/firestore';
 import { AuthContext } from '../providers/AuthProvider';
 
 const ChatRoomScreen = ({ route, navigation }) => {
@@ -12,6 +12,7 @@ const ChatRoomScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]); 
   const [selectedMessage, setSelectedMessage] = useState(null);  
   const [senderId, setSenderId] = useState(null);  
+  const [senderRole, setSenderRole] = useState(null);
   const [loading, setLoading] = useState(true); 
   const [readyToRender, setReadyToRender] = useState(false); 
 
@@ -36,9 +37,11 @@ const ChatRoomScreen = ({ route, navigation }) => {
       if (chatDoc.exists()) {
         const chatData = chatDoc.data();
         if (chatData.buyer_id === currentUserId) {
-          setSenderId('buyer');
+          setSenderRole('buyer');
+          setSenderId(currentUserId);
         } else if (chatData.farmer_id === currentUserId) {
-          setSenderId('farmer'); 
+          setSenderRole('farmer'); 
+          setSenderId(currentUserId);
         }
         setReadyToRender(true); // Ensure all critical info is loaded
       }
@@ -49,6 +52,30 @@ const ChatRoomScreen = ({ route, navigation }) => {
     return () => unsubscribe();
   }, [chatId, currentUserId]);
 
+  useEffect(() => {
+    const markMessagesAsRead = async () => {
+      const messagesRef = collection(db, 'chat_rooms', chatId, 'messages');
+      try {
+        const messagesQuery = query(messagesRef, 
+          where('isRead', '==', false),
+          where('senderId', '!=', userAuthData.uid)
+        );
+    
+        const querySnapshot = await getDocs(messagesQuery);
+        querySnapshot.forEach(async (doc) => {
+          await updateDoc(doc.ref, {
+            isRead: true,
+          });
+        });
+      } catch (error) {
+        console.error("Error marking messages as Read", error);
+      }
+    };
+
+    markMessagesAsRead();
+
+  }, [])
+
   const sendMessage = async () => {
     if (message.trim() && senderId) {
       try {
@@ -56,7 +83,8 @@ const ChatRoomScreen = ({ route, navigation }) => {
         const newMessage = {
           text: message,
           createdAt: new Date(),
-          senderId: senderId,  
+          senderId: currentUserId,  
+          isRead: false,
         };
         await addDoc(collection(db, 'chat_rooms', chatId, 'messages'), newMessage);
 

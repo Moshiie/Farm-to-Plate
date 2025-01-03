@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import { View } from 'react-native';
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -49,15 +50,20 @@ import BuyerOrderListScreen from '../screens/BuyerOrderListScreen';
 //Loading Utility
 import Loading from "../screens/utils/Loading";
 
+//Custom Hooks
+import useUnreadMessages from "../hooks/useUnreadMessages";
+
 const Tab = createBottomTabNavigator();
 const BottomTabNavigator = () => {
+  const hasUnreadMessages = useUnreadMessages();
+  
   return (
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
+          let iconName; 
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
@@ -65,7 +71,24 @@ const BottomTabNavigator = () => {
 
           } else if (route.name === 'Chat') {
             iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return (
+              <React.Fragment>
+                <Ionicons name={iconName} size={size} color={color} />
+                {hasUnreadMessages && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 5,
+                      right: 55,
+                      width: 10,
+                      height: 10,
+                      borderRadius: 5,
+                      backgroundColor: 'red',
+                    }}
+                  />
+                )}
+              </React.Fragment>
+            );
 
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
