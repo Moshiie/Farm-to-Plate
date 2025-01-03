@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ImageBackground, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { db } from '../firebaseConfig'; // Import Firestore from your config file
+import { db } from '../firebaseConfig'; 
 import { collection, getDocs, query, where, setDoc, doc } from 'firebase/firestore';
-import { AuthContext } from '../providers/AuthProvider'; // Assumed import for user context (add this if you manage auth)
+import { AuthContext } from '../providers/AuthProvider';  
 
 const BuyerShopDashboardScreen = ({ navigation, route }) => {
   const [farmerProducts, setFarmerProducts] = useState([]);
   const [storeInfo, setStoreInfo] = useState(route.params?.farmerDetails);
   const [loading, setLoading] = useState(true);
-  const { userAuthData } = useContext(AuthContext); // Get user info from the AuthContext
+  const { userAuthData, userData } = useContext(AuthContext); 
 
   useEffect(() => {
     setLoading(true);
@@ -62,7 +62,12 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
       const newChatRef = doc(chatRef);
       await setDoc(newChatRef, {
         buyer_id: buyerId,
+        buyer_name: 
+          userData.first_name && userData.last_name 
+            ? `${userData.first_name} ${userData.last_name}` 
+            : userData.email,
         farmer_id: farmerId,
+        store_name: storeInfo.store_name, 
         createdAt: new Date(),
         status: 'active',
       });

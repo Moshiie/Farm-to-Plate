@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { db } from '../firebaseConfig'; // Import Firestore from your config file
-import { collection, query, where, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig'; 
+import { collection, query, orderBy, onSnapshot, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { AuthContext } from '../providers/AuthProvider';
 
 const ChatRoomScreen = ({ route, navigation }) => {
   const { chatId, name } = route.params;
+  const { userAuthData } = useContext(AuthContext);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([]); 
+  const [selectedMessage, setSelectedMessage] = useState(null);  
+  const [senderId, setSenderId] = useState(null);  
+  const [loading, setLoading] = useState(true); 
+  const [readyToRender, setReadyToRender] = useState(false); 
+
+  const currentUserId = userAuthData?.uid;
 
   // Real-time listener for messages in a specific chat room
   useEffect(() => {
@@ -22,26 +30,64 @@ const ChatRoomScreen = ({ route, navigation }) => {
       setMessages(messagesData);
     });
 
-    // Cleanup the listener when the screen is unmounted
-    return () => unsubscribe();
-  }, [chatId]);
+    const getChatRoomDetails = async () => {
+      const chatDocRef = doc(db, 'chat_rooms', chatId);
+      const chatDoc = await getDoc(chatDocRef);
+      if (chatDoc.exists()) {
+        const chatData = chatDoc.data();
+        if (chatData.buyer_id === currentUserId) {
+          setSenderId('buyer');
+        } else if (chatData.farmer_id === currentUserId) {
+          setSenderId('farmer'); 
+        }
+        setReadyToRender(true); // Ensure all critical info is loaded
+      }
+    };
 
-  // Send a new message
+    getChatRoomDetails();
+
+    return () => unsubscribe();
+  }, [chatId, currentUserId]);
+
   const sendMessage = async () => {
-    if (message.trim()) {
+    if (message.trim() && senderId) {
       try {
+        // Add New Message
         const newMessage = {
           text: message,
           createdAt: new Date(),
-          senderId: 'buyer', // Dynamically set based on the current user role
+          senderId: senderId,  
         };
         await addDoc(collection(db, 'chat_rooms', chatId, 'messages'), newMessage);
-        setMessage(''); // Clear the input field
+
+         // latest message
+        const chatDocRef = doc(db, 'chat_rooms', chatId);
+        await updateDoc(chatDocRef, {
+          last_message: message, 
+          last_message_time: newMessage.createdAt
+        });
+
+        setMessage(''); // Clear input
       } catch (error) {
         console.error('Error sending message:', error);
       }
     }
   };
+
+  const formatTime = (createdAt) => {
+    const date = new Date(createdAt.seconds * 1000);
+    return `${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`;
+  };
+
+  // Only render content if the senderId is defined (avoids initial flickering)
+  if (!readyToRender) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#66b366" />
+        <Text>Loading chat...</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -51,18 +97,28 @@ const ChatRoomScreen = ({ route, navigation }) => {
         </TouchableOpacity>
         <Text style={styles.chatHeader}>Chat with {name}</Text>
       </View>
+
+      {/* Render messages after 'readyToRender' is true */}
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={[styles.messageContainer, item.senderId === 'buyer' ? styles.myMessage : styles.theirMessage]}>
-            <Text style={[styles.messageText, item.senderId === 'buyer' ? styles.myMessageText : styles.theirMessageText]}>
+          <TouchableOpacity 
+            onPress={() => setSelectedMessage(item)}   // Toggle time visibility
+            style={[styles.messageContainer, item.senderId === senderId ? styles.myMessage : styles.theirMessage]}
+          >
+            <Text style={[styles.messageText, item.senderId === senderId ? styles.myMessageText : styles.theirMessageText]}>
               {item.text}
             </Text>
-          </View>
+            {/* Only show time if this message is selected */}
+            {selectedMessage?.id === item.id && (
+              <Text style={styles.timestamp}>{formatTime(item.createdAt)}</Text> 
+            )}
+          </TouchableOpacity>
         )}
-        inverted={false}  // Remove inversion so messages start from the top
+        inverted={false}  // Remove inversion to start from the top
       />
+
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -88,7 +144,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 15,
     marginBottom: 10,
-    backgroundColor: '#66b366', // Green header
+    backgroundColor: '#66b366',
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#4d734d',
@@ -99,23 +155,31 @@ const styles = StyleSheet.create({
   chatHeader: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',  // White header text
+    color: '#fff',
     marginLeft: 15,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
   messageContainer: {
-    backgroundColor: '#d1e8d1',
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
     maxWidth: '80%',
+    marginHorizontal: 15,
   },
   myMessage: {
-    backgroundColor: '#66b366', // Green for buyer's message
+    backgroundColor: '#66b366',
     alignSelf: 'flex-end',
+    marginRight: 15,
   },
   theirMessage: {
-    backgroundColor: '#a1d18d', // Lighter green for the farmer's message
+    backgroundColor: '#a1d18d',
     alignSelf: 'flex-start',
+    marginLeft: 15,
   },
   messageText: {
     color: '#333',
@@ -128,6 +192,13 @@ const styles = StyleSheet.create({
   theirMessageText: {
     color: '#333',
   },
+  timestamp: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 5,
+    marginLeft: 10,   // Moves the time slightly to the right
+    alignSelf: 'flex-end', // Align time to the right for consistency
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -135,7 +206,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#66b366', // Green border for the input area
+    borderTopColor: '#66b366',
   },
   input: {
     flex: 1,

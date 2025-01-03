@@ -40,12 +40,11 @@ const AuthProvider = (props) => {
 
   const fetchUserData = async (uid) => {
     try {
-      // the user document from Firestore using the user's UID
       const docRef = doc(db, 'users', uid); 
       const docSnap = await getDoc(docRef); 
 
       if (docSnap.exists()) {
-        setUserData(docSnap.data());  // Set user data from Firestore to state management with Context APIi
+        setUserData(docSnap.data());  
 
       } else {
         console.log('No user document found, creating one.');

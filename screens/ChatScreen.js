@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { db } from '../firebaseConfig';
-import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'; 
+import { collection, query, or, where, onSnapshot } from 'firebase/firestore';
 import { AuthContext } from '../providers/AuthProvider';
 
-const ChatScreen = ({ navigation, route }) => {
+const ChatScreen = ({ navigation }) => {
   const { userAuthData } = useContext(AuthContext);
-  const [chatRooms, setChatRooms] = useState([]); 
+  const [chatRooms, setChatRooms] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,24 +16,25 @@ const ChatScreen = ({ navigation, route }) => {
         if (!userId) return;
 
         const chatRoomsRef = collection(db, 'chat_rooms');
-        
         const chatRoomsQuery = query(
           chatRoomsRef,
-          where('status', '==', 'active'), 
-          where('buyer_id', '==', userId) 
+          or(where('buyer_id', '==', userId), where('farmer_id', '==', userId)) // Fetch both buyer and farmer chats
         );
-        
-        // Using onSnapshot for real-time updates
+
+        // Real-time updates with onSnapshot
         const unsubscribe = onSnapshot(chatRoomsQuery, (querySnapshot) => {
-          const fetchedChatRooms = querySnapshot.docs.map(doc => ({
+          const fetchedChatRooms = querySnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
+            actingAs: doc.data().buyer_id === userId ? 'Buyer' : 'Seller',  
+            lastMessage: doc.data().last_message,
+            lastMessageTime: doc.data().last_message_time,
           }));
-          setChatRooms(fetchedChatRooms); // Set chat rooms to state
+          setChatRooms(fetchedChatRooms);
           setLoading(false);
         });
 
-        return unsubscribe; // Clean up on unmount
+        return unsubscribe; // Clean up listener on unmount
       } catch (error) {
         console.error('Error fetching chat rooms:', error);
         setLoading(false);
@@ -41,7 +42,13 @@ const ChatScreen = ({ navigation, route }) => {
     };
 
     fetchChats();
-  }, []); // Empty dependency array to run only once
+  }, [userAuthData?.uid]);
+
+  const formatTime = (time) => {
+    if (!time) return '';
+    const date = time.seconds ? new Date(time.seconds * 1000) : new Date(time);
+    return `${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`;
+  };
 
   if (loading) {
     return (
@@ -64,15 +71,26 @@ const ChatScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <FlatList
         data={chatRooms}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.chatItem}
-            onPress={() => navigation.navigate('ChatRoom', { chatId: item.id, name: item.name })}
+            onPress={() => navigation.navigate('ChatRoom', { 
+              chatId: item.id, 
+              name: item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name 
+            })}
           >
             <View>
-              <Text style={styles.chatName}>Chat with Farmer {item.farmer_id}</Text>
+              <Text style={styles.chatName}>Chat with{" "}
+                {item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name}
+              </Text>
+              <Text style={styles.chatRoleIndicator}>
+                {`You are acting as a ${item.actingAs}`}
+              </Text>
               <Text style={styles.chatMessage}>{item.last_message || 'No recent message'}</Text>
+              {item.lastMessageTime && (
+                <Text style={styles.chatTime}>{formatTime(item.lastMessageTime)}</Text>
+              )}
             </View>
           </TouchableOpacity>
         )}
@@ -88,7 +106,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   chatItem: {
-    backgroundColor: '#66b366', // Green background
+    backgroundColor: '#66b366',
     padding: 15,
     marginVertical: 5,
     borderRadius: 8,
@@ -100,9 +118,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
+  chatRoleIndicator: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#d1ffd1',
+    marginVertical: 4,
+  },
   chatMessage: {
     fontSize: 14,
     color: '#fff',
+  },
+  chatTime: {
+    fontSize: 12,
+    color: '#d1ffd1',
   },
   loadingContainer: {
     flex: 1,
@@ -122,7 +150,7 @@ const styles = StyleSheet.create({
   noChatsText: {
     fontSize: 18,
     color: '#888',
-  },
+  },  
 });
 
 export default ChatScreen;
