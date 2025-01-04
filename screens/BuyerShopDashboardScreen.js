@@ -72,10 +72,8 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
         status: 'active',
       });
 
-      // Navigate to the newly created chat room
       navigation.navigate('ChatRoom', { chatId: newChatRef.id, name: storeInfo.store_name });
     } else {
-      // If chat room exists, navigate to the existing chat
       const existingChat = chatSnapshot.docs[0].data();
       navigation.navigate('ChatRoom', { chatId: chatSnapshot.docs[0].id, name: storeInfo.store_name });
     }
@@ -89,6 +87,14 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
       <Text style={styles.productName}>{item.name}</Text>
       <Text style={styles.productPrice}>₱ {item.price}</Text>
       <Text style={styles.productSold}>Stock: {item.stock}</Text>
+
+      {/* View Details Button */}
+      <TouchableOpacity
+        style={styles.viewDetailsButton}
+        onPress={() => navigation.navigate('ProductDetails', { product: item })}
+      >
+        <Text style={styles.viewDetailsText}>View Details</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -119,13 +125,17 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
           <Text style={styles.loadingText}>Loading products...</Text>
         </View>
       ) : (
-        <View style={styles.productListContainer}>
+        <>
           {farmerProducts.length > 0 ? (
-            farmerProducts.map(renderProduct)
+            <View style={styles.productListContainer}>
+              {farmerProducts.map(renderProduct)}
+            </View>
           ) : (
-            <Text style={styles.noProductsText}>No products available.</Text>
+            <View style={styles.noProductsTextContainer}>
+              <Text style={styles.noProductsText}>No products available.</Text>
+            </View>
           )}
-        </View>
+        </>
       )}
     </ScrollView>
   );
@@ -157,9 +167,13 @@ const styles = StyleSheet.create({
     height: 150,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 15
   },
   productListContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
+    flexDirection: 'row',   // Align items in a row
+    flexWrap: 'wrap',       // Allow wrapping to the next line
+    justifyContent: 'space-between', // Spread items out evenly
   },
   productCard: {
     backgroundColor: '#FFF',
@@ -171,6 +185,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 5,
+    width: '48%',           // Make each product take 48% of the row width
+    marginBottom: 15,       // Margin to create space between rows
   },
   imagePlaceholder: {
     height: 100,
@@ -198,8 +214,20 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginTop: 20,
+    alignSelf: 'center',
   },
-
+  viewDetailsButton: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#2E4C2D',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  viewDetailsText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

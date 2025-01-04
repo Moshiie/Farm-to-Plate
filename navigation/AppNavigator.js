@@ -44,6 +44,7 @@ import AddressForm from '../screens/AddressForm';
 import MapScreen from '../screens/MapScreen';
 import BuyerShopDashboardScreen from '../screens/BuyerShopDashboardScreen';
 import ProductScreen from '../screens/ProductScreen';
+import ProductDetailsScreen from '../screens/ProductDetailsScreen';
 import BuyerOrderDetailsScreen from '../screens/BuyerOrderDetailsScreen';
 import BuyerOrderListScreen from '../screens/BuyerOrderListScreen';
 
@@ -128,6 +129,7 @@ const Main = () => {
       <MainStack.Screen name="ShopDashboard" component={ShopDashboardScreen} />
       <MainStack.Screen name="BuyerShopDashboard" component={BuyerShopDashboardScreen} />
       <MainStack.Screen name="Product" component={ProductScreen} />
+      <MainStack.Screen name="ProductDetails" component={ProductDetailsScreen} />
       <MainStack.Screen name="AddProduct" component={AddProductScreen} />
       <MainStack.Screen name="ProductList" component={ProductListScreen} />
       <MainStack.Screen name="BuyerOrderDetails" component={BuyerOrderDetailsScreen} />

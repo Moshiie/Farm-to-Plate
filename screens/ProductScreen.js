@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useContext }from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, Modal  } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
 import { AuthContext } from '../providers/AuthProvider';
-import { db } from '../firebaseConfig'
+import { db } from '../firebaseConfig';
 import { collection, doc, setDoc, getDocs, query, where } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,19 +9,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 const ProductScreen = ({ route, navigation }) => {
 
   const { userData, userAuthData } = useContext(AuthContext);
-  const { product } = route.params; 
+  const { product, quantityFromDetailsScreen } = route.params; // Receiving quantity from the ProductDetailsScreen
   const [farmerDetails, setFarmerDetails] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [subTotal, setSubTotal] = useState(product.price ? parseFloat(product.price) : 0);
+  const [subTotal, setSubTotal] = useState(isNaN(product.price) || product.price <= 0 ? 0 : parseFloat(product.price));
   const [voucher, setVoucher] = useState(null); // to hold the applied voucher
   const [vouchers, setVouchers] = useState([]); // to hold the available vouchers
   const [deliveryFee] = useState(100); // Static delivery fee
   const [adjustedDeliveryFee, setAdjustedDeliveryFee] = useState(deliveryFee);
   const [modalVisible, setModalVisible] = useState(false);
-  
+
   useEffect(() => {
-    setSubTotal(product.price * quantity); 
-  }, [quantity, product.price]);
+    if (!isNaN(product.price) && product.price > 0 && quantityFromDetailsScreen > 0) {
+      setSubTotal(product.price * quantityFromDetailsScreen); // Using quantity from ProductDetailsScreen
+    }
+  }, [quantityFromDetailsScreen, product.price]);
 
   useEffect(() => {
     const fetchFarmerDetails = async () => {
@@ -33,9 +34,7 @@ const ProductScreen = ({ route, navigation }) => {
         if (!querySnapshot.empty) {
           querySnapshot.forEach((doc) => {
             setFarmerDetails(doc.data());
-            console.log(doc.data());
           });
-
         } else {
           console.log('No matching farmer found');
           Alert.alert('Error', 'Store not found for this product');
@@ -57,11 +56,9 @@ const ProductScreen = ({ route, navigation }) => {
       const fetchedVouchers = [];
       querySnapshot.forEach((doc) => {
         fetchedVouchers.push(doc.data());
-        console.log(doc.data());
       });
       setVouchers(fetchedVouchers);
       setModalVisible(true);
-
     } catch (error) {
       console.error('Error fetching vouchers: ', error);
       Alert.alert('Error', 'There was an error fetching the vouchers');
@@ -69,7 +66,6 @@ const ProductScreen = ({ route, navigation }) => {
   };
 
   const handleVoucherApply = (selectedVoucher) => {
-
     const currentDate = new Date();
     const expiryDate = selectedVoucher.expiry_date.toDate();
 
@@ -94,21 +90,19 @@ const ProductScreen = ({ route, navigation }) => {
 
       const newDeliveryFee = Math.max(0, deliveryFee - discountAmount);
       setAdjustedDeliveryFee(newDeliveryFee);
-  
       setVoucher({
         ...selectedVoucher,
         discount_amount: discountAmount,
         discount_type: 'delivery',
       });
-  
-      Alert.alert('Delivery Discount Applied', `You get ₱${discountAmount.toFixed(2)} off on delivery.`);
       
+      Alert.alert('Delivery Discount Applied', `You get ₱${discountAmount.toFixed(2)} off on delivery.`);
     } else if (selectedVoucher.type === 'subtotal') {
       const discountAmount =
         selectedVoucher.discount.type === 'percentage'
           ? (subTotal * selectedVoucher.discount.amount) / 100
           : selectedVoucher.discount.amount;
-  
+
       setVoucher({
         ...selectedVoucher,
         discount_amount: discountAmount,
@@ -154,13 +148,13 @@ const ProductScreen = ({ route, navigation }) => {
       store_name: farmerDetails.store_name,
       store_address: farmerDetails.default_pickup_address,
       order_date: new Date(),
-      quantity: quantity,
+      quantity: quantityFromDetailsScreen, // Static quantity received from ProductDetailsScreen
       subtotal: subTotal,  
-      delivery_fee: deliveryFee,
+      delivery_fee: effectiveDeliveryFee, // Used the updated delivery fee after voucher discount
       total_amount: totalAmount,
       voucher_applied: voucher ? voucher.name : null, 
       voucher_discount: voucher ? voucher.discount_amount : 0,
-      status: 'Processing', // Example status, you can add more
+      status: 'Processing', // Example status
     };
 
     try {
@@ -182,7 +176,7 @@ const ProductScreen = ({ route, navigation }) => {
       Alert.alert('Error', 'There was an error placing your order. Please try again.');
     }
     
-  }
+  };
 
   return (
     <LinearGradient colors={['#7A9F59', '#fff']} style={styles.container}>
@@ -191,7 +185,7 @@ const ProductScreen = ({ route, navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back-outline" size={28} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Product Details</Text>
+        <Text style={styles.headerText}>Check Out Order</Text>
       </View>
 
       {/* Scrollable content for Product Details */}
@@ -218,23 +212,8 @@ const ProductScreen = ({ route, navigation }) => {
           {/* Product Stock */}
           <Text style={styles.productStock}>Stock: {product.stock}</Text>
 
-          {/* Quantity Selection */}
-          <View style={styles.quantityContainer}>
-            <Text style={styles.quantityText}>Quantity:</Text>
-            <TouchableOpacity
-              style={styles.quantityButton}
-              onPress={() => setQuantity(Math.max(quantity - 1, 1))}
-            >
-              <Ionicons name="remove" size={20} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.quantityNumber}>{quantity}</Text>
-            <TouchableOpacity
-              style={styles.quantityButton}
-              onPress={() => setQuantity(quantity + 1)}
-            >
-              <Ionicons name="add" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
+          {/* Static Quantity */}
+          <Text style={styles.quantityText}>Quantity: {quantityFromDetailsScreen}</Text>
 
           {/* Subtotal Display */}
           <Text style={styles.subtotalText}>Subtotal: ₱ {subTotal.toFixed(2)}</Text>
@@ -250,9 +229,6 @@ const ProductScreen = ({ route, navigation }) => {
               Applied Voucher: {voucher.name} - {voucher.discount_type === 'delivery' ? '₱' + voucher.discount_amount : voucher.discount_amount + '%'}
             </Text>
           )}
-
-          {/* Voucher Discount */}
-          {voucher && <Text style={styles.voucherText}>Applied Voucher: {voucher.name} - Discount: ₱ {(subTotal * voucher.discount_value) / 100 || voucher.discount_value}</Text>}
           
           {/* Delivery Fee */}
           <Text style={styles.deliveryFeeText}>Delivery Fee: ₱ {adjustedDeliveryFee.toFixed(2)}</Text>
@@ -280,40 +256,23 @@ const ProductScreen = ({ route, navigation }) => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Available Vouchers</Text>
             {vouchers.length > 0 ? (
-              vouchers.map((voucher, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.voucherItem}
-                  onPress={() => handleVoucherApply(voucher)}
-                >
-                  <Text style={styles.voucherName}>{voucher.name}</Text>
-                  <Text style={styles.voucherDetails}>
-                    {voucher.discount.type === 'fixed' ? '₱ ' + voucher.discount.amount : voucher.discount.amount + '% off'}
-                  </Text>
+              vouchers.map((voucher) => (
+                <TouchableOpacity key={voucher.id} style={styles.voucherItem} onPress={() => handleVoucherApply(voucher)}>
+                  <Text style={styles.voucherItemText}>{voucher.name}</Text>
                 </TouchableOpacity>
               ))
             ) : (
-              <Text>No vouchers available</Text>
+              <Text>No vouchers available.</Text>
             )}
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
+            <TouchableOpacity
+              style={styles.closeModalButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-          <Ionicons name="home" size={28} color="#7A9F59" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Cart')}>
-          <Ionicons name="cart-outline" size={28} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-          <Ionicons name="person-outline" size={28} color="#333" />
-        </TouchableOpacity>
-      </View>
     </LinearGradient>
   );
 };
@@ -321,142 +280,102 @@ const ProductScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f3f3f3',
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    padding: 10,
     justifyContent: 'flex-start',
-    paddingHorizontal: 15,
-    paddingTop: 40,
-    paddingBottom: 15,
+    alignItems: 'center',
   },
   headerText: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     marginLeft: 10,
   },
   content: {
-    paddingHorizontal: 20,
-    flex: 1,
+    marginTop: 10,
   },
   productCard: {
+    padding: 15,
     backgroundColor: '#fff',
-    padding: 20,
+    marginBottom: 10,
     borderRadius: 10,
-    marginVertical: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
   },
   imageContainer: {
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    height: 200,
-    marginBottom: 20,
-    borderRadius: 10,
   },
   productImage: {
-    width: '100%',
-    height: '100%',
+    width: 200,
+    height: 200,
     borderRadius: 10,
-    objectFit: 'cover',
+    resizeMode: 'contain',
   },
   productName: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    marginVertical: 10,
   },
   productPrice: {
-    fontSize: 20,
-    color: '#28a745',
-    marginVertical: 10,
+    fontSize: 18,
+    color: '#7A9F59',
   },
   productDescription: {
     fontSize: 16,
-    color: '#555',
-    marginVertical: 10,
+    marginTop: 10,
+    marginBottom: 10,
+    color: '#666',
   },
   productStock: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 20,
-  },
-  quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 10,
   },
   quantityText: {
-    fontSize: 18,
-    marginRight: 10,
-    color: '#555',
-  },
-  quantityButton: {
-    backgroundColor: '#7A9F59',
-    padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 10,
-  },
-  quantityNumber: {
-    fontSize: 18,
-    color: '#555',
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 10,
   },
   subtotalText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#28a745',
-    marginVertical: 10,
+    marginTop: 10,
+    marginBottom: 5,
   },
   voucherButton: {
-    backgroundColor: '#ff6347',
-    paddingVertical: 10,
-    borderRadius: 10,
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#7A9F59',
+    borderRadius: 5,
     alignItems: 'center',
   },
   voucherText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   deliveryFeeText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#28a745',
     marginTop: 10,
+    marginBottom: 5,
   },
   totalAmountText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#28a745',
     marginTop: 10,
+    marginBottom: 15,
   },
   addToCartButton: {
     backgroundColor: '#7A9F59',
-    paddingVertical: 15,
-    borderRadius: 10,
-    marginTop: 10,
+    borderRadius: 5,
+    padding: 12,
+    marginTop: 20,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   addToCartText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
   },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    borderTopColor: '#ccc',
-    borderTopWidth: 1,
-    width: '100%',
-  },
-  // Modal styles
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -464,48 +383,40 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    width: 300,
     padding: 20,
+    backgroundColor: '#fff',
     borderRadius: 10,
-    width: '80%',
-    maxWidth: 400,
-    elevation: 10,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 15,
-    color: '#333',
-  },
-  voucherItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  voucherName: {
-    fontSize: 16,
-    color: '#333',
-  },
-  voucherDetails: {
-    fontSize: 14,
-    color: '#7A9F59',
-  },
-  closeButton: {
-    backgroundColor: '#FF6347',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 15,
-    alignSelf: 'center',
-  },
-  closeButtonText: {
-    fontSize: 16,
-    color: '#fff',
+  modalTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  voucherItem: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+    width: '100%',
+    alignItems: 'center',
+  },
+  voucherItemText: {
+    fontSize: 16,
+  },
+  closeModalButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#7A9F59',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
+    backgroundColor: '#fff',
   },
 });
 

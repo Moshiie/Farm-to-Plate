@@ -205,7 +205,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => console.log('Navigating to Buy Orders')}//Navigate to Order List for Buyers
+            onPress={() => navigation.navigate('BuyerOrderList')}
           >
             <Icon name="list-alt" size={30} color="#2E4C2D" />
             <Text style={styles.actionText}>Orders</Text>

@@ -14,7 +14,7 @@ import {
   Image 
 } from 'react-native';
 import { db } from '../firebaseConfig'; // Import Firestore from your config file
-import { collection, doc, getDocs, setDoc, deleteDoc} from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, updateDoc} from 'firebase/firestore';
 import { AuthContext } from '../providers/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -106,10 +106,11 @@ export default function HomeScreen({ navigation }) {
       <Text style={styles.productName}>{item.name}</Text>
       <Text style={styles.productPrice}>₱ {item.price}</Text>
       <Text style={styles.productSold}>Stock: {item.stock}</Text>
-      <TouchableOpacity 
-        onPress={() => navigation.navigate('Product', { product: item })}
+      <TouchableOpacity
+        style={styles.viewDetailsButton}
+        onPress={() => navigation.navigate('ProductDetails', { product: item })}
       >
-        <Text style={styles.productDetailsLink}>View Details</Text>
+        <Text style={styles.viewDetailsText}>View Details</Text>
       </TouchableOpacity>
     </View>
   );
@@ -142,10 +143,20 @@ export default function HomeScreen({ navigation }) {
       const favouritesRef = collection(db, `users/${userId}/liked_products`);
       const productDocRef = doc(favouritesRef, product.id);
 
+      const productRef = doc(db, 'products', product.id);
+
+      // Fetch the latest product data to get the correct likes_count
+      const productSnapshot = await getDoc(productRef);
+      const productData = productSnapshot.data();
+      const currentLikesCount = productData ? productData.likes_count : 0;
+
       if (product.isFavourite) {
         await deleteDoc(productDocRef);
         console.log('Removed from favourites:', product.name);
 
+        await updateDoc(productRef, {
+          likes_count: currentLikesCount - 1,
+        });  
       } else {
         await setDoc(productDocRef, {
           product_id: product.id,
@@ -157,6 +168,10 @@ export default function HomeScreen({ navigation }) {
           liked_at: new Date().toISOString(),
         });
         console.log('Added to favourites:', product.name);
+
+        await updateDoc(productRef, {
+          likes_count: currentLikesCount + 1,
+        });
       }
 
       setProducts((prevProducts) =>
@@ -178,7 +193,10 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.locationContainer}>
             <Ionicons name="location-outline" size={20} color="#fff" />
             <View>
-              <Text style={styles.locationText}>Rosario Cres</Text>
+              <Text style={styles.locationText}>
+              {userData.first_name && userData.last_name 
+                ? `${userData.first_name} ${userData.last_name}` 
+                : userData.email}</Text>
               <Text style={styles.locationSubText}>Cagayan de Oro Misamis Oriental</Text>
             </View>
           </View>
@@ -212,7 +230,7 @@ export default function HomeScreen({ navigation }) {
         ) : (
           <View contentContainerStyle={styles.contentContainer}>
             {/* Products */}
-            <Text style={styles.sectionTitle}>Recommended Products</Text>
+            <Text style={styles.sectionTitle}>Products</Text>
             <FlatList
               data={filteredProducts} 
               renderItem={renderProduct}
@@ -223,7 +241,7 @@ export default function HomeScreen({ navigation }) {
             />
 
             {/* Shops */}
-            <Text style={styles.sectionTitle}>Recommended Shops</Text>
+            <Text style={styles.sectionTitle}>  Shops</Text>
             <FlatList
               data={filteredStores}
               renderItem={renderStore}
@@ -262,7 +280,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 30,
+    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight - 20 : 20,
     paddingBottom: 10,
     backgroundColor: '#7A9F59',
   },
@@ -337,6 +355,12 @@ const styles = StyleSheet.create({
     right: 10,
     zIndex: 1,
   },
+  productImage: {
+    width: '100%',
+    height: 100, 
+    borderRadius: 10,
+    marginBottom: 10,
+  },
   imagePlaceholder: {
     height: 100,
     justifyContent: 'center',
@@ -351,13 +375,25 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   productPrice: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#888',
     marginBottom: 5,
   },
   productSold: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#888',
+  },
+  viewDetailsButton: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#2E4C2D',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  viewDetailsText: {
+    color: '#FFF',
+    fontWeight: 'bold',
   },
   shopList: {
     paddingHorizontal: 15,
@@ -376,6 +412,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: 250,
+  },
+  shopImage: {
+    width: '100%',
+    height: 50,
   },
   shopIcon: {
     marginRight: 15,

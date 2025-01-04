@@ -1,135 +1,123 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { db } from '../firebaseConfig';
+import { AuthContext } from '../providers/AuthProvider';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 const BuyerOrderListScreen = ({ navigation }) => {
+  const { userAuthData } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('All Orders');
+  const [orders, setOrders] = useState({
+    'All Orders': [],
+    Pending: [],
+    Processing: [],
+    Completed: [],
+    Cancelled: [],
+  });
 
-  const orders = {
-    'All Orders': [
-      { id: 1, type: 'Deliver / Pick-up', price: '₱100.00', status: 'Pending' },
-      { id: 2, type: 'Deliver / Pick-up', price: '₱200.00', status: 'Processing' },
-      { id: 3, type: 'Deliver / Pick-up', price: '₱150.00', status: 'Completed' },
-      { id: 4, type: 'Deliver / Pick-up', price: '₱50.00', status: 'Cancelled' },
-    ],
-    'Pending': [{ id: 1, type: 'Deliver / Pick-up', price: '₱100.00', status: 'Pending' }],
-    'Processing': [{ id: 2, type: 'Deliver / Pick-up', price: '₱200.00', status: 'Processing' }],
-    'Completed': [{ id: 3, type: 'Deliver / Pick-up', price: '₱150.00', status: 'Completed' }],
-    'Cancelled': [{ id: 4, type: 'Deliver / Pick-up', price: '₱50.00', status: 'Cancelled' }],
-  };
+  useEffect(() => {
+    if (!userAuthData?.uid) return;
+
+    const ordersRef = collection(db, 'orders');
+    const ordersQuery = query(ordersRef, where('user_id', '==', userAuthData.uid));
+
+    const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+      const fetchedOrders = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      const categorizedOrders = {
+        'All Orders': fetchedOrders,
+        Pending: fetchedOrders.filter(order => order.status === 'Pending'),
+        Processing: fetchedOrders.filter(order => order.status === 'Processing'),
+        Completed: fetchedOrders.filter(order => order.status === 'Completed'),
+        Cancelled: fetchedOrders.filter(order => order.status === 'Cancelled'),
+      };
+
+      setOrders(categorizedOrders);
+    });
+
+    return () => unsubscribe();
+  }, [userAuthData]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <Image
-          source={{ uri: 'https://via.placeholder.com/60' }}
-          style={styles.shopLogo}
-        />
-        <View style={styles.shopInfo}>
-          <TouchableOpacity onPress={() => navigation.navigate('ShopDetails')}>
-            <Text style={styles.shopName}>Shop Name</Text>
-          </TouchableOpacity>
-          <Text style={styles.shopRating}>⭐ 4.9</Text>
-        </View>
-      </View>
-
+    <View style={styles.container}>
+      {/* Search Bar */}
       <View style={styles.searchBar}>
         <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search Order"
+          placeholder="Search Orders"
           placeholderTextColor="#888"
         />
       </View>
 
-      <View style={styles.tabContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {['All Orders', 'Pending', 'Processing', 'Completed', 'Cancelled'].map((status, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.tabButton, activeTab === status && styles.activeTab]}
-              onPress={() => setActiveTab(status)}
-            >
-              <Text style={activeTab === status ? styles.tabTextActive : styles.tabText}>{status}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+      {/* Tabs */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.tabContainer}
+      >
+        {['All Orders', 'Pending', 'Processing', 'Completed', 'Cancelled'].map((status, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.tabButton, activeTab === status && styles.activeTab]}
+            onPress={() => setActiveTab(status)}
+          >
+            <Text style={activeTab === status ? styles.tabTextActive : styles.tabText}>{status}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-      <View style={styles.orderList}>
+      {/* Order List */}
+      <ScrollView style={styles.orderList}>
         {orders[activeTab].map((order) => (
           <View style={styles.orderCard} key={order.id}>
             <View style={styles.orderDetails}>
-              <Text style={styles.orderTitle}>Order #{order.id}</Text>
-              <Text style={styles.orderType}>{order.type}</Text>
-              <Text style={styles.orderPrice}>{order.price}</Text>
+              <Text style={styles.orderTitle}>Order for {order.product_name}</Text>
+              <Text style={styles.orderInfo}>Price: ₱{order.product_price}</Text>
+              <Text style={styles.orderInfo}>Quantity: {order.quantity}</Text>
+              <Text style={styles.orderPrice}>₱{order.total_amount}</Text>
             </View>
             <View style={styles.orderActions}>
-              <Text style={[styles.orderStatus, styles[order.status.toLowerCase()]]}>{order.status}</Text>
+              <Text style={[styles.orderStatus, styles[order.status.toLowerCase()]]}>
+                {order.status}
+              </Text>
               <TouchableOpacity
-                style={[styles.viewOrderButtonDetails, { marginTop: 10 }]}
-                onPress={() => navigation.navigate('OrderDetails', { orderId: order.id })}
+                style={styles.viewOrderButton}
+                onPress={() => navigation.navigate('BuyerOrderDetails', { order: order })}
               >
-                <Text style={styles.viewOrderText}>View Order</Text>
+                <Text style={styles.viewOrderText}>View Details</Text>
               </TouchableOpacity>
             </View>
           </View>
         ))}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F8F9FA',
-    paddingBottom: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#2E4C2D',
-    borderBottomWidth: 1,
-    borderBottomColor: '#DDD',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
-  },
-  shopLogo: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 15,
-  },
-  shopInfo: {
-    flex: 1,
-  },
-  shopName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  shopRating: {
-    fontSize: 14,
-    color: '#FFD700',
-    marginTop: 5,
+    backgroundColor: '#F5F5F5',
+    paddingTop: 20,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
-    borderRadius: 25,
-    margin: 20,
+    borderRadius: 30,
+    marginHorizontal: 20,
+    marginBottom: 20,
     paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingVertical: 10,
+    elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowRadius: 5,
+    shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
   },
   searchIcon: {
     marginRight: 10,
@@ -140,50 +128,47 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   tabContainer: {
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#DDD',
+    marginBottom: 15,
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
   },
   tabButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    marginRight: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    height: 30,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 20,
+    backgroundColor: '#EAEAEA',
+    marginRight: 8,
+    elevation: 1,
   },
   activeTab: {
     backgroundColor: '#2E4C2D',
   },
   tabText: {
-    color: '#888',
-    fontSize: 14,
+    fontSize: 12,
+    color: '#666',
   },
   tabTextActive: {
+    fontSize: 12,
+    fontWeight: '600',
     color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   orderList: {
     paddingHorizontal: 20,
   },
   orderCard: {
-    backgroundColor: '#FFF',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#EEE',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#FFF',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
   orderDetails: {
     flex: 1,
@@ -191,17 +176,17 @@ const styles = StyleSheet.create({
   },
   orderTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#333',
   },
-  orderType: {
+  orderInfo: {
     fontSize: 14,
-    color: '#777',
-    marginVertical: 5,
+    color: '#666',
+    marginTop: 2,
   },
   orderPrice: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#2E4C2D',
   },
   orderActions: {
@@ -209,25 +194,24 @@ const styles = StyleSheet.create({
   },
   orderStatus: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '600',
     textTransform: 'uppercase',
-    marginTop: 10,
+    marginBottom: 10,
   },
   pending: { color: '#FFA500' },
   processing: { color: '#007BFF' },
   completed: { color: '#28A745' },
   cancelled: { color: '#DC3545' },
-  viewOrderButtonDetails: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+  viewOrderButton: {
     backgroundColor: '#2E4C2D',
     borderRadius: 5,
-    marginBottom: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   viewOrderText: {
     color: '#FFF',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
 });
 

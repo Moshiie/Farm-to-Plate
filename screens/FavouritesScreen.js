@@ -126,6 +126,12 @@ export default function FavouritesScreen({ navigation }) {
         <Text style={styles.productSold}>Stock: {item.stock}</Text>
       </View>
       <TouchableOpacity
+        style={styles.viewDetailsButton}
+        onPress={() => navigation.navigate('ProductDetails', { product: item })}
+      >
+        <Text style={styles.viewDetailsButtonText}>View Details</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
         style={styles.removeButton}
         onPress={() => handleRemoveItem(item)}
       >
@@ -252,6 +258,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginTop: 3,
+  },
+  viewDetailsButton: {
+    backgroundColor: '#2E4C2D',
+    borderRadius: 5,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginRight: 10, // Add space between the buttons
+  },
+  viewDetailsButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   removeButton: {
     padding: 5,
