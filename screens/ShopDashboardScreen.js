@@ -135,7 +135,7 @@ const ShopDashboardScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#C8D6C5',
+    backgroundColor: '#528f45',
   },
   loader: {
     flex: 1,
@@ -170,7 +170,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   secondContainer: {
+    flex: 1,
     padding: 15,
+    backgroundColor: 'white',
+    borderTopWidth: 2,
+    borderTopColor: '#DDD',
   },
   detailsContainer: {
     backgroundColor: '#FFF',

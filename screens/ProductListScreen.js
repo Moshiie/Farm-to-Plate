@@ -110,7 +110,7 @@ const ProductListScreen = ({ navigation }) => {
         {/* Shop Header */}
         <View style={styles.shopHeader}>
           <Image
-            source={{ uri: 'https://via.placeholder.com/60' }}
+            source={{ uri: farmerDetails.store_photo || 'https://via.placeholder.com/60' }}
             style={styles.shopLogo}
           />
           <View style={styles.shopInfo}>

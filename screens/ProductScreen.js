@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 const ProductScreen = ({ route, navigation }) => {
 
   const { userData, userAuthData } = useContext(AuthContext);
-  const { product, quantityFromDetailsScreen } = route.params; // Receiving quantity from the ProductDetailsScreen
+  const { product, quantityFromDetailsScreen } = route.params;  
   const [farmerDetails, setFarmerDetails] = useState(null);
   const [subTotal, setSubTotal] = useState(isNaN(product.price) || product.price <= 0 ? 0 : parseFloat(product.price));
   const [voucher, setVoucher] = useState(null); // to hold the applied voucher
@@ -134,12 +134,13 @@ const ProductScreen = ({ route, navigation }) => {
     const totalAmount =
       (voucher && voucher.discount_type === 'subtotal' ? subTotal : subTotal) + effectiveDeliveryFee;
 
+    console.log(product);
     const orderId = `${userAuthData.uid}_${new Date().getTime()}`;
     const order = {
       user_id: userAuthData.uid,
       user_name: userData.first_name + userData.last_name || 'NoName',
       user_email: userData.email,
-      product_id: product.id,
+      product_id: product.id || product.uid,
       product_name: product.name,
       product_price: product.price,
       product_image: product.product_image || '',

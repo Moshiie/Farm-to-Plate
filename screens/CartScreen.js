@@ -9,7 +9,7 @@ import {
   FlatList, 
   Alert 
 } from 'react-native';
-import { collection, query, where, doc, onSnapshot, deleteDoc } from "firebase/firestore";
+import { collection, query, where, doc, getDoc, onSnapshot, deleteDoc } from "firebase/firestore";
 import { db } from '../firebaseConfig';
 import { AuthContext } from '../providers/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +19,7 @@ import basketIcon from '../images/cart.png';
 const CartScreen = ({ navigation }) => {
   const { userAuthData } = useContext(AuthContext);
   const [cartItems, setCartItems] = useState([]);
+  const [selectedItemId, setSelectedItemId] = useState(null);
 
   useEffect(() => {
     const userId = userAuthData.uid;
@@ -33,7 +34,6 @@ const CartScreen = ({ navigation }) => {
   }, []);
 
   const handleDeleteItem = (itemId) => {
-    // Show confirmation alert
     Alert.alert(
       "Confirm Delete",
       "Are you sure you want to remove this item from your cart?",
@@ -61,19 +61,60 @@ const CartScreen = ({ navigation }) => {
     }
   };
 
+  const handleRadioChange = (itemId) => {
+    setSelectedItemId((prevSelectedId) => (prevSelectedId === itemId ? null : itemId));
+  };
+
+  const handleCheckout = async () => {
+    const selectedItem = cartItems.find(item => item.id === selectedItemId);
+
+    if (selectedItem) {
+      const { product_id, quantity } = selectedItem;  
+      
+      try {
+        const productRef = doc(db, "products", product_id);
+        const productSnap = await getDoc(productRef);
+  
+        if (productSnap.exists()) {
+          console.log(product_id);
+          const product = productSnap.data();
+          product.id = product_id;
+          
+          navigation.navigate('Product', { product: product, quantityFromDetailsScreen: quantity });
+        } else {
+          Alert.alert("Product not found!");
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        Alert.alert("Error fetching product details.");
+      }
+    } else {
+      Alert.alert('Please select an item to checkout.');
+    }
+  };
+
   const renderCartItem = ({ item }) => (
     <View style={styles.cartItem}>
-      {item.product_image ? (
-        <Image source={{ uri: item.product_image }} style={styles.productImage} resizeMode="contain" />
-      ) : (
-        <Ionicons name="image-outline" size={80} color="#ccc" style={styles.productImage} />
-      )}
+      {/* Radio Button */}
+      <TouchableOpacity
+        style={styles.radioButton}
+        onPress={() => handleRadioChange(item.id)}
+      >
+        <View style={[styles.radioCircle, selectedItemId === item.id && styles.selectedRadioCircle]} />
+      </TouchableOpacity>
+
+      <Image
+        source={{ uri: item.product_image || 'https://via.placeholder.com/150' }}
+        style={styles.productImage}
+        resizeMode="contain"
+      />
       <View style={styles.itemDetails}>
         <Text style={styles.productName}>Product: {item.name}</Text>
         <Text style={styles.productPrice}>Price: ₱ {item.price}</Text>
         <Text style={styles.productQuantity}>x{item.quantity}</Text>
         <Text style={styles.productSubtotal}>Subtotal: ₱ {item.subtotal}</Text>  
       </View>
+
       {/* Delete Button */}
       <TouchableOpacity
         style={styles.deleteButton}
@@ -120,6 +161,15 @@ const CartScreen = ({ navigation }) => {
           />
         )}
       </View>
+
+      {/* Checkout Button */}
+      <TouchableOpacity
+        style={[styles.checkoutButton, selectedItemId === null && styles.disabledButton]}
+        onPress={handleCheckout}
+        disabled={selectedItemId === null}  
+      >
+        <Text style={styles.checkoutButtonText}>Checkout</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -153,12 +203,12 @@ const styles = StyleSheet.create({
   },
   cartItem: {
     flexDirection: "row",
-    marginTop: 20,  // Added margin for spacing
+    marginTop: 20,
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 5,
-    backgroundColor: "#E8F5E9",  // Greenish background for cart items
-    shadowColor: '#000',  // Shadow for a subtle elevation effect
+    backgroundColor: "#E8F5E9",
+    shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
@@ -179,7 +229,7 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 16,
     fontWeight: "bold",
-    color: '#388E3C',  // Darker green for better contrast
+    color: '#388E3C',
   },
   productPrice: {
     fontSize: 14,
@@ -187,11 +237,48 @@ const styles = StyleSheet.create({
   },
   productQuantity: {
     fontSize: 14,
-    color: "#333",  // Adjusted for contrast
+    color: "#333",
   },
   productSubtotal: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#FF5722", 
+    fontWeight: 'bold',
+  },
+  radioButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 5,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#2E4C2D',
+  },
+  selectedRadioCircle: {
+    backgroundColor: '#2E4C2D',
+  },
+  deleteButton: {
+    marginLeft: 10,
+    alignSelf: 'center',
+  },
+  checkoutButton: {
+    position: 'absolute',
+    bottom: 30,
+    left: 20,
+    right: 20,
+    backgroundColor: '#1C3814',
+    paddingVertical: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#BDBDBD',  // Grey out the button when disabled
+  },
+  checkoutButtonText: {
+    color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
   },
   emptyContainer: {
@@ -227,10 +314,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  deleteButton: {
-    marginLeft: 10,
-    alignSelf: 'center', // Centered vertically with item
   },
 });
 
