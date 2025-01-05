@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,29 +8,57 @@ import {
   TouchableOpacity,
   Modal,
 } from 'react-native';
+import { doc, collection, addDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig";
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { AuthContext } from '../providers/AuthProvider';
 
 export default function ProductDetailsScreen({ route, navigation }) {
   const { product } = route.params;
+  const { userAuthData } = useContext(AuthContext);
+
   const [modalVisible, setModalVisible] = useState(false);
   const [actionType, setActionType] = useState(null); 
   const [quantity, setQuantity] = useState(1);
 
-  const handleAddToCart = () => {
+  const goToAddToCart = () => {
     setActionType('addToCart');
     setModalVisible(true);
   };
 
-  const handleBuyNow = () => {
+  const goToBuyNow = () => {
     setActionType('buyNow');
     setModalVisible(true);
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      const userId = userAuthData.uid;
+      const cartItemsRef = collection(doc(db, "users", userId), "cart_items");
+  
+      const cartItem = {
+        product_id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity,
+        image: product.product_image,
+        created_at: new Date(),
+        subtotal: product.price * quantity
+      };
+  
+      await addDoc(cartItemsRef, cartItem);
+  
+      navigation.navigate("Cart");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    }
   };
 
   const handleModalAction = () => {
     setModalVisible(false);
     if (actionType === 'addToCart') {
-      navigation.navigate('Cart'); 
+      handleAddToCart();
     } else if (actionType === 'buyNow') {
       navigation.navigate('Product', {
         product,
@@ -91,11 +119,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
       {/* Bottom Buttons */}
       <View style={styles.bottomButtons}>
-        <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
+        <TouchableOpacity style={styles.addToCartButton} onPress={goToAddToCart}>
           <Ionicons name="cart-outline" size={20} color="#fff" style={styles.cartIcon} />
           <Text style={styles.buttonText}>Add to Cart</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
+        <TouchableOpacity style={styles.buyNowButton} onPress={goToBuyNow}>
           <Text style={styles.buttonText}>Buy Now</Text>
         </TouchableOpacity>
       </View>

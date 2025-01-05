@@ -194,9 +194,10 @@ export default function HomeScreen({ navigation }) {
             <Ionicons name="location-outline" size={20} color="#fff" />
             <View>
               <Text style={styles.locationText}>
-              {userData.first_name && userData.last_name 
-                ? `${userData.first_name} ${userData.last_name}` 
-                : userData.email}</Text>
+              {userData?.first_name || userData?.last_name
+                ? `${userData.first_name ?? ''} ${userData.last_name ?? ''}`.trim()
+                : userData?.email || 'Guest User'}
+              </Text>
               <Text style={styles.locationSubText}>Cagayan de Oro Misamis Oriental</Text>
             </View>
           </View>
