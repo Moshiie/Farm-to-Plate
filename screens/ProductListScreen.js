@@ -89,9 +89,14 @@ const ProductListScreen = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Header with Background Image */}
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('ShopDashboard')}>
+        <Ionicons name="arrow-back" size={24} color="#FFF" />
+      </TouchableOpacity>
+
+      {/* Header with Background Image (Shop photo as cover) */}
       <ImageBackground
-        source={require('../images/veg.jpg')}
+        source={{ uri: farmerDetails.store_photo || 'https://via.placeholder.com/200' }}  // Shop photo as background
         style={styles.backgroundImage}
         resizeMode="cover"
       >
@@ -107,12 +112,8 @@ const ProductListScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* Shop Header */}
+        {/* Shop Header (No photo here anymore) */}
         <View style={styles.shopHeader}>
-          <Image
-            source={{ uri: farmerDetails.store_photo || 'https://via.placeholder.com/60' }}
-            style={styles.shopLogo}
-          />
           <View style={styles.shopInfo}>
             <TouchableOpacity onPress={() => navigation.navigate('ShopDashboard')}>
               <Text style={styles.shopName}>{farmerDetails.store_name}</Text>
@@ -121,6 +122,7 @@ const ProductListScreen = ({ navigation }) => {
         </View>
       </ImageBackground>
 
+      {/* The rest of the component remains the same */}
       {/* Product Tab */}
       <View style={styles.tabContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -184,6 +186,14 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#F5F5F5',
   },
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 5,
+    backgroundColor: 'transparent', 
+  },
+
   backgroundImage: {
     width: '100%',
     height: 200,
@@ -215,14 +225,8 @@ const styles = StyleSheet.create({
   shopHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
-    paddingHorizontal: 20,
-  },
-  shopLogo: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 10,
+    marginTop: 25,
+    paddingHorizontal: 130,
   },
   shopInfo: {
     flex: 1,
@@ -270,7 +274,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 20,
   },
   productCard: {
     width: '48%',
@@ -322,9 +326,8 @@ const styles = StyleSheet.create({
   addProductButton: {
     backgroundColor: '#2E4C2D',
     paddingVertical: 12,
+    paddingHorizontal: 12,
     borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
   },
   addProductText: {
     fontSize: 16,

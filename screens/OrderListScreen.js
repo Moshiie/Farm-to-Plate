@@ -1,5 +1,14 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image, ImageBackground } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  ImageBackground,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../providers/AuthProvider';
 import { db } from '../firebaseConfig';
@@ -67,7 +76,9 @@ const OrderListScreen = ({ navigation }) => {
       setFilteredOrders(orders);
     } else {
       setFilteredOrders(
-        orders.filter((order) => order.product_name.toLowerCase().includes(searchQuery.toLowerCase()))
+        orders.filter((order) =>
+          order.product_name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
       );
     }
   };
@@ -86,37 +97,36 @@ const OrderListScreen = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Background Image for consistency with ProductListScreen */}
+      {/* Background Image for the Shop Cover */}
       <ImageBackground
-        source={require('../images/veg.jpg')}
+        source={{ uri: farmerDetails.store_photo || 'https://via.placeholder.com/150' }}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon}/>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search Order"
-            placeholderTextColor="#888"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
+        {/* Back Button */}
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
 
-        {/* Shop Header with Store Name */}
+        {/* Shop Header with Name */}
         <View style={styles.shopHeader}>
-          <Image
-            source={{ uri: farmerDetails.store_photo || 'https://via.placeholder.com/60' }}
-            style={styles.shopLogo}
-          />
           <View style={styles.shopInfo}>
-            <TouchableOpacity>
-              <Text style={styles.shopName}>{farmerDetails.store_name}</Text>
-            </TouchableOpacity>
+            <Text style={styles.shopName}>{farmerDetails.store_name}</Text>
           </View>
         </View>
       </ImageBackground>
+
+      {/* Search Bar */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search Order"
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
 
       {/* Tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabContainer}>
@@ -126,7 +136,9 @@ const OrderListScreen = ({ navigation }) => {
             style={[styles.tabButton, activeTab === status && styles.activeTab]}
             onPress={() => setActiveTab(status)}
           >
-            <Text style={activeTab === status ? styles.tabTextActive : styles.tabText}>{status}</Text>
+            <Text style={activeTab === status ? styles.tabTextActive : styles.tabText}>
+              {status}
+            </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -173,10 +185,39 @@ const styles = StyleSheet.create({
   backgroundImage: {
     width: '100%',
     height: 200,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+    justifyContent: 'center', // Center content vertically
+    alignItems: 'center', // Center content horizontally
     paddingTop: 40,
     paddingBottom: 20,
+    position: 'relative', // To ensure positioning for shop name and back button
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 10,
+    zIndex: 10,
+    backgroundColor: 'transparent',
+  },
+  shopHeader: {
+    flexDirection: 'column', // Ensure vertical alignment
+    justifyContent: 'center', // Center content vertically
+    alignItems: 'center', // Center content horizontally
+    marginTop: 20, // Reduced margin to give more room for the name
+    paddingHorizontal: 10,
+  },
+  shopInfo: {
+    flex: 1,
+    justifyContent: 'center',
+    textAlign: 'center', // Centering the text
+    marginTop: 0, // Adjusting the vertical spacing
+  },
+  shopName: {
+    fontSize: 24, // Increase font size for better visibility
+    fontWeight: 'bold',
+    color: '#fff', // White text to stand out against darker backgrounds
+    textShadowColor: 'rgba(0, 0, 0, 0.5)', // Adding shadow for better contrast
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 5,
   },
   searchBar: {
     flexDirection: 'row',
@@ -189,6 +230,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
+    alignSelf: 'center',
   },
   searchIcon: {
     marginHorizontal: 10,
@@ -198,15 +240,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#302f2f',
   },
-  shopHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    paddingHorizontal: 20,
-  },
-  shopLogo: { width: 60, height: 60, borderRadius: 30, marginRight: 10 },
-  shopInfo: { flex: 1 },
-  shopName: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
   tabContainer: {
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
@@ -230,9 +263,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  tabTextActive: { 
-    color: '#2E4C2D', 
-    fontWeight: 'bold', 
+  tabTextActive: {
+    color: '#2E4C2D',
+    fontWeight: 'bold',
   },
   orderList: { paddingHorizontal: 20 },
   orderCard: {
