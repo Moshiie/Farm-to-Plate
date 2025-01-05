@@ -153,9 +153,6 @@ const ProfileScreen = ({ navigation }) => {
       {/* Header */}
       <LinearGradient colors={['#2E4C2D', '#2E4C2D']} style={styles.header}>
         <Text style={styles.title}>Account</Text>
-        <TouchableOpacity style={styles.gearButton}>
-          <Icon name="gear" size={24} color="#fff" />
-        </TouchableOpacity>
       </LinearGradient>
   
       {/* Main Content */}

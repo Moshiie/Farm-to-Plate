@@ -5,7 +5,7 @@ import { collection, query, where, onSnapshot, getDocs, or, and } from 'firebase
 import { AuthContext } from '../providers/AuthProvider';
 
 const ChatScreen = ({ navigation }) => {
-  const { userAuthData } = useContext(AuthContext);
+  const { userAuthData, userData } = useContext(AuthContext);
   const [chatRooms, setChatRooms] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -106,37 +106,48 @@ const ChatScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={chatRooms}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.chatItem}
-            onPress={() => navigation.navigate('ChatRoom', { 
-              chatId: item.id, 
-              name: item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name 
-            })}
-          >
-            <View>
-              <Text style={styles.chatName}>Chat with{" "}
-                {item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name}
-              </Text>
-              <Text style={styles.chatRoleIndicator}>
-                {`You are acting as a ${item.actingAs}`}
-              </Text>
-              <Text style={styles.chatMessage}>{item.last_message || 'No recent message'}</Text>
-              {item.lastMessageTime && (
-                <Text style={styles.chatTime}>{formatTime(item.lastMessageTime)}</Text>
-              )}
-              {item.unreadCount > 0 && (
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadBadgeText}>{item.unreadCount}</Text>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
-        )}
-      />
+      {/* Top Bar */}
+      <View style={styles.topBar}>
+        <Text style={styles.title}>
+          {userData?.first_name || userData?.last_name
+            ? `${userData.first_name ?? ''} ${userData.last_name ?? ''}`.trim()
+            : userData?.email || 'Guest User'}'s Chats
+        </Text>
+      </View>
+
+      <View style={styles.secondContainer}>
+        <FlatList
+          data={chatRooms}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.chatItem}
+              onPress={() => navigation.navigate('ChatRoom', { 
+                chatId: item.id, 
+                name: item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name 
+              })}
+            >
+              <View>
+                <Text style={styles.chatName}>Chat with{" "}
+                  {item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name}
+                </Text>
+                <Text style={styles.chatRoleIndicator}>
+                  {`You are acting as a ${item.actingAs}`}
+                </Text>
+                <Text style={styles.chatMessage}>{item.last_message || 'No recent message'}</Text>
+                {item.lastMessageTime && (
+                  <Text style={styles.chatTime}>{formatTime(item.lastMessageTime)}</Text>
+                )}
+                {item.unreadCount > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadBadgeText}>{item.unreadCount}</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
     </View>
   );
 };
@@ -144,7 +155,24 @@ const ChatScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e6f7f1',
+    backgroundColor: '#e6f7f1', 
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#2E4C2D',
+    paddingHorizontal: 15,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  secondContainer: {
     padding: 10,
   },
   chatItem: {

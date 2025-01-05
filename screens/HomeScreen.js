@@ -13,7 +13,7 @@ import {
   ActivityIndicator, 
   Image 
 } from 'react-native';
-import { db } from '../firebaseConfig'; // Import Firestore from your config file
+import { db } from '../firebaseConfig'; 
 import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, updateDoc} from 'firebase/firestore';
 import { AuthContext } from '../providers/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +23,6 @@ const screenWidth = Dimensions.get('window').width;
 const cardWidth = screenWidth / 2 - 20;
 
 export default function HomeScreen({ navigation }) {
-
   const { userData, userAuthData } = useContext(AuthContext);
 
   const [imageError, setImageError] = useState(false);
@@ -43,33 +42,42 @@ export default function HomeScreen({ navigation }) {
           id: doc.id,
           ...doc.data(),
         }));
-        setProducts(productsList);
+
+        // Filter out the products that belong to the user
+        const filteredProducts = productsList.filter((product) => 
+          product.farmer_id !== userAuthData.uid
+        );
+        setProducts(filteredProducts);
 
         // Fetch store data
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const storeList = [];
         for (const userDoc of usersSnapshot.docs) {
-          const farmerDetailsRef = collection(db,`users/${userDoc.id}/farmer_details`);
+          const farmerDetailsRef = collection(db, `users/${userDoc.id}/farmer_details`);
           const farmerSnapshot = await getDocs(farmerDetailsRef);
           farmerSnapshot.forEach((farmerDoc) => {
             storeList.push({
               id: farmerDoc.id,
               ...farmerDoc.data(),
+              farmer_id: userDoc.id // Add user_id for comparison
             });
           });
         }
-        setStores(storeList);
 
+        // Filter out the stores that belong to the user
+        const filteredStores = storeList.filter((store) =>
+          store.farmer_id !== userAuthData.uid && store.store_name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setStores(filteredStores);
       } catch (error) {
         console.error('Error fetching data: ', error);
-        
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [searchQuery, userAuthData.uid]);
 
   const filteredProducts = products.filter((product) => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -145,7 +153,6 @@ export default function HomeScreen({ navigation }) {
 
       const productRef = doc(db, 'products', product.id);
 
-      // Fetch the latest product data to get the correct likes_count
       const productSnapshot = await getDoc(productRef);
       const productData = productSnapshot.data();
       const currentLikesCount = productData ? productData.likes_count : 0;
@@ -161,7 +168,7 @@ export default function HomeScreen({ navigation }) {
         await setDoc(productDocRef, {
           product_id: product.id,
           name: product.name,
-          category: product.category || 'Uncategorized', // Use default if missing
+          category: product.category || 'Uncategorized',
           price: product.price,
           description: product.description || 'No description available',
           stock: product.stock,
@@ -194,9 +201,9 @@ export default function HomeScreen({ navigation }) {
             <Ionicons name="location-outline" size={20} color="#fff" />
             <View>
               <Text style={styles.locationText}>
-              {userData?.first_name || userData?.last_name
-                ? `${userData.first_name ?? ''} ${userData.last_name ?? ''}`.trim()
-                : userData?.email || 'Guest User'}
+                {userData?.first_name || userData?.last_name
+                  ? `${userData.first_name ?? ''} ${userData.last_name ?? ''}`.trim()
+                  : userData?.email || 'Guest User'}
               </Text>
               <Text style={styles.locationSubText}>Cagayan de Oro Misamis Oriental</Text>
             </View>
@@ -242,7 +249,7 @@ export default function HomeScreen({ navigation }) {
             />
 
             {/* Shops */}
-            <Text style={styles.sectionTitle}>  Shops</Text>
+            <Text style={styles.sectionTitle}>Shops</Text>
             <FlatList
               data={filteredStores}
               renderItem={renderStore}
@@ -397,40 +404,40 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   shopList: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
   },
   shopCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: cardWidth,
+    margin: 10,
+    padding: 10,
     backgroundColor: '#fff',
-    padding: 15,
     borderRadius: 10,
-    margin: 5,
-    marginRight: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
-    width: 250,
   },
   shopImage: {
     width: '100%',
-    height: 50,
+    height: 100,
+    borderRadius: 10,
   },
   shopIcon: {
-    marginRight: 15,
+    marginBottom: 10,
+    alignSelf: 'center',
   },
   shopDetails: {
-    flex: 1,
+    marginTop: 10,
+    alignItems: 'center',
   },
   shopName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
   },
   shopLocation: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#888',
   },
 });
