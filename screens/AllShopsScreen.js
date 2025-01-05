@@ -20,36 +20,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const screenWidth = Dimensions.get('window').width;
-const cardWidth = screenWidth / 2 - 20;
+const cardWidth = screenWidth / 2 - 30;
 
-export default function HomeScreen({ navigation }) {
+export default function AllShopsScreen({ navigation }) {
   const { userData, userAuthData } = useContext(AuthContext);
-
   const [imageError, setImageError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [products, setProducts] = useState([]);
   const [stores, setStores] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch products
-        const productsRef = collection(db, 'products');
-        const productsSnapshot = await getDocs(productsRef);
-        const productsList = productsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        // Filter out the products that belong to the user
-        const filteredProducts = productsList.filter((product) => 
-          product.farmer_id !== userAuthData.uid
-        );
-        setProducts(filteredProducts);
-
-        // Fetch store data
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const storeList = [];
         for (const userDoc of usersSnapshot.docs) {
@@ -59,12 +42,10 @@ export default function HomeScreen({ navigation }) {
             storeList.push({
               id: farmerDoc.id,
               ...farmerDoc.data(),
-              farmer_id: userDoc.id // Add user_id for comparison
+              farmer_id: userDoc.id 
             });
           });
         }
-
-        // Filter out the stores that belong to the user
         const filteredStores = storeList.filter((store) =>
           store.farmer_id !== userAuthData.uid && store.store_name.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -79,53 +60,15 @@ export default function HomeScreen({ navigation }) {
     fetchData();
   }, [searchQuery, userAuthData.uid]);
 
-  const filteredProducts = products.filter((product) => 
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const filteredStores = stores.filter((store) =>
     store.store_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderProduct = ({ item }) => (
-    <View style={styles.productCard}>
-      <TouchableOpacity
-        style={styles.favouriteIcon}
-        onPress={() => toggleFavourite(item)}
-      > 
-        <Ionicons
-          name={item.isFavourite ? 'heart' : 'heart-outline'}
-          size={24}
-          color={item.isFavourite ? '#E63946' : 'black'}
-        />
-      </TouchableOpacity>
-      
-      {item.product_image ? (
-        <Image
-          source={{ uri: item.product_image }}
-          style={styles.productImage}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={styles.imagePlaceholder}>
-          <Ionicons name="image-outline" size={50} color="#555" />
-        </View>
-      )}
-      <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.productPrice}>₱ {item.price}</Text>
-      <Text style={styles.productSold}>Stock: {item.stock}</Text>
-      <TouchableOpacity
-        style={styles.viewDetailsButton}
-        onPress={() => navigation.navigate('ProductDetails', { product: item })}
-      >
-        <Text style={styles.viewDetailsText}>View Details</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   const renderStore = ({ item }) => {
     return (
-      <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('BuyerShopDashboard', { farmerDetails: item })}>
+      <TouchableOpacity 
+        style={styles.shopCard} 
+        onPress={() => navigation.navigate('BuyerShopDashboard', { farmerDetails: item })}>
         {item.store_photo && !imageError ? (
           <Image  
             source={{ uri: item.store_photo }}
@@ -142,53 +85,6 @@ export default function HomeScreen({ navigation }) {
         </View>
       </TouchableOpacity>
     );
-  };
-
-  const toggleFavourite = async (product) => {
-    try {
-      const userId = userAuthData.uid; 
-      
-      const favouritesRef = collection(db, `users/${userId}/liked_products`);
-      const productDocRef = doc(favouritesRef, product.id);
-
-      const productRef = doc(db, 'products', product.id);
-
-      const productSnapshot = await getDoc(productRef);
-      const productData = productSnapshot.data();
-      const currentLikesCount = productData ? productData.likes_count : 0;
-
-      if (product.isFavourite) {
-        await deleteDoc(productDocRef);
-        console.log('Removed from favourites:', product.name);
-
-        await updateDoc(productRef, {
-          likes_count: currentLikesCount - 1,
-        });  
-      } else {
-        await setDoc(productDocRef, {
-          product_id: product.id,
-          name: product.name,
-          category: product.category || 'Uncategorized',
-          price: product.price,
-          description: product.description || 'No description available',
-          stock: product.stock,
-          liked_at: new Date().toISOString(),
-        });
-        console.log('Added to favourites:', product.name);
-
-        await updateDoc(productRef, {
-          likes_count: currentLikesCount + 1,
-        });
-      }
-
-      setProducts((prevProducts) =>
-        prevProducts.map((item) =>
-          item.id === product.id ? { ...item, isFavourite: !item.isFavourite } : item
-        )
-      );
-    } catch (error) {
-      console.error('Error toggling favourite:', error);
-    }
   };
 
   return (
@@ -223,7 +119,7 @@ export default function HomeScreen({ navigation }) {
           <Ionicons name="search-outline" size={20} color="#888" style={styles.searchIcon} />
           <TextInput
             style={styles.searchBar}
-            placeholder="Search for products or shops..."
+            placeholder="Search for shops..."
             placeholderTextColor="#888"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -236,36 +132,13 @@ export default function HomeScreen({ navigation }) {
             <ActivityIndicator size="large" color="#006400" />
           </View>
         ) : (
-          <View contentContainerStyle={styles.contentContainer}>
-           {/* Products Section */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Products</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AllProducts')}>
-              <Text style={styles.viewAllText}>View All Products</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={filteredProducts} 
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.productList}
-          />
-
-          {/* Shops Section */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Shops</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AllShops')}>
-              <Text style={styles.viewAllText}>View All Shops</Text>
-            </TouchableOpacity>
-          </View>
+          <View style={{ flex: 1, marginTop: 15 }}>
           <FlatList
             data={filteredStores}
             renderItem={renderStore}
             keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
+            numColumns={2}
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.shopList}
           />
           </View>
@@ -351,34 +224,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     marginLeft: 20,
   },
-  productList: {
-    paddingHorizontal: 10,
-  },
-  productCard: {
-    backgroundColor: '#fff',
-    margin: 10,
-    borderRadius: 10,
-    padding: 10,
-    width: cardWidth,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-    position: 'relative',
-  },
-  favouriteIcon: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-  },
-  productImage: {
-    width: '100%',
-    height: 100, 
-    borderRadius: 10,
-    marginBottom: 10,
-  },
   imagePlaceholder: {
     height: 100,
     justifyContent: 'center',
@@ -386,32 +231,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#EAEAEA',
     borderRadius: 10,
     marginBottom: 10,
-  },
-  productName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  productPrice: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 5,
-  },
-  productSold: {
-    fontSize: 12,
-    color: '#888',
-  },
-  viewDetailsButton: {
-    marginTop: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#2E4C2D',
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  viewDetailsText: {
-    color: '#FFF',
-    fontWeight: 'bold',
   },
   shopList: {
     paddingHorizontal: 10,
@@ -458,9 +277,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   viewAllText: {
-    fontSize: 12,
-    color: '#2E4C2D', 
+    fontSize: 16,
+    color: '#2E4C2D', // Match this with your color scheme
     fontWeight: 'bold',
-    textDecorationLine: 'underline',  
+    textDecorationLine: 'underline', // Optional, to give a hyperlink look
   },
 });

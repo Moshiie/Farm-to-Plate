@@ -22,14 +22,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 const screenWidth = Dimensions.get('window').width;
 const cardWidth = screenWidth / 2 - 20;
 
-export default function HomeScreen({ navigation }) {
+export default function AllProductsScreen({ navigation }) {
   const { userData, userAuthData } = useContext(AuthContext);
-
-  const [imageError, setImageError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState([]);
-  const [stores, setStores] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,32 +40,10 @@ export default function HomeScreen({ navigation }) {
           ...doc.data(),
         }));
 
-        // Filter out the products that belong to the user
         const filteredProducts = productsList.filter((product) => 
           product.farmer_id !== userAuthData.uid
         );
         setProducts(filteredProducts);
-
-        // Fetch store data
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        const storeList = [];
-        for (const userDoc of usersSnapshot.docs) {
-          const farmerDetailsRef = collection(db, `users/${userDoc.id}/farmer_details`);
-          const farmerSnapshot = await getDocs(farmerDetailsRef);
-          farmerSnapshot.forEach((farmerDoc) => {
-            storeList.push({
-              id: farmerDoc.id,
-              ...farmerDoc.data(),
-              farmer_id: userDoc.id // Add user_id for comparison
-            });
-          });
-        }
-
-        // Filter out the stores that belong to the user
-        const filteredStores = storeList.filter((store) =>
-          store.farmer_id !== userAuthData.uid && store.store_name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setStores(filteredStores);
       } catch (error) {
         console.error('Error fetching data: ', error);
       } finally {
@@ -81,10 +56,6 @@ export default function HomeScreen({ navigation }) {
 
   const filteredProducts = products.filter((product) => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredStores = stores.filter((store) =>
-    store.store_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const renderProduct = ({ item }) => (
@@ -122,27 +93,6 @@ export default function HomeScreen({ navigation }) {
       </TouchableOpacity>
     </View>
   );
-
-  const renderStore = ({ item }) => {
-    return (
-      <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('BuyerShopDashboard', { farmerDetails: item })}>
-        {item.store_photo && !imageError ? (
-          <Image  
-            source={{ uri: item.store_photo }}
-            style={styles.shopImage}
-            resizeMode="cover"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <Ionicons name="storefront-outline" size={40} color="#555" style={styles.shopIcon} />
-        )}
-        <View style={styles.shopDetails}>
-          <Text style={styles.shopName}>{item.store_name}</Text>
-          <Text style={styles.shopLocation}>{item.store_description}</Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
 
   const toggleFavourite = async (product) => {
     try {
@@ -223,7 +173,7 @@ export default function HomeScreen({ navigation }) {
           <Ionicons name="search-outline" size={20} color="#888" style={styles.searchIcon} />
           <TextInput
             style={styles.searchBar}
-            placeholder="Search for products or shops..."
+            placeholder="Search for products..."
             placeholderTextColor="#888"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -236,38 +186,15 @@ export default function HomeScreen({ navigation }) {
             <ActivityIndicator size="large" color="#006400" />
           </View>
         ) : (
-          <View contentContainerStyle={styles.contentContainer}>
-           {/* Products Section */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Products</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AllProducts')}>
-              <Text style={styles.viewAllText}>View All Products</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={filteredProducts} 
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.productList}
-          />
-
-          {/* Shops Section */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Shops</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AllShops')}>
-              <Text style={styles.viewAllText}>View All Shops</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={filteredStores}
-            renderItem={renderStore}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.shopList}
-          />
+          <View style={{ flex: 1, marginTop: 15 }}>
+            <FlatList
+                data={filteredProducts} 
+                renderItem={renderProduct}
+                keyExtractor={(item) => item.id}
+                numColumns={2}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.productList}
+            />
           </View>
         )}
       </LinearGradient>
@@ -349,14 +276,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginVertical: 10,
-    marginLeft: 20,
   },
   productList: {
     paddingHorizontal: 10,
   },
   productCard: {
     backgroundColor: '#fff',
-    margin: 10,
+    margin: 5,
     borderRadius: 10,
     padding: 10,
     width: cardWidth,
@@ -412,55 +338,11 @@ const styles = StyleSheet.create({
   viewDetailsText: {
     color: '#FFF',
     fontWeight: 'bold',
-  },
-  shopList: {
-    paddingHorizontal: 10,
-  },
-  shopCard: {
-    width: cardWidth,
-    margin: 10,
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  shopImage: {
-    width: '100%',
-    height: 100,
-    borderRadius: 10,
-  },
-  shopIcon: {
-    marginBottom: 10,
-    alignSelf: 'center',
-  },
-  shopDetails: {
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  shopName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  shopLocation: {
-    fontSize: 12,
-    color: '#888',
-  },
+  }, 
   sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 10,
     marginHorizontal: 20,
-  },
-  viewAllText: {
-    fontSize: 12,
-    color: '#2E4C2D', 
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',  
   },
 });

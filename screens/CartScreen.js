@@ -124,21 +124,7 @@ const CartScreen = ({ navigation }) => {
       </TouchableOpacity>
     </View>
   );
-
-  const EmptyCart = () => (
-    <View style={styles.emptyContainer}>
-      <Image source={basketIcon} style={styles.basketIcon} />
-      <Text style={styles.outOfStockText}>Out of stock?</Text>
-      <Text style={styles.subText}>You haven't added anything to your cart!</Text>
-      <TouchableOpacity 
-        style={styles.browseButton} 
-        onPress={() => navigation.navigate('Home')}
-      >
-        <Text style={styles.browseButtonText}>Browse</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
+  
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -152,7 +138,17 @@ const CartScreen = ({ navigation }) => {
       {/* Render FlatList or Empty State */}
       <View style={styles.secondContainer}>
         {cartItems.length === 0 ? (
-          <EmptyCart />
+          <View style={styles.emptyContainer}>
+            <Image source={basketIcon} style={styles.basketIcon} />
+            <Text style={styles.outOfStockText}>Out of stock?</Text>
+            <Text style={styles.subText}>You haven't added anything to your cart!</Text>
+            <TouchableOpacity 
+              style={styles.browseButton} 
+              onPress={() => navigation.navigate('Home')}
+            >
+              <Text style={styles.browseButtonText}>Browse</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <FlatList
             data={cartItems}
@@ -161,15 +157,6 @@ const CartScreen = ({ navigation }) => {
           />
         )}
       </View>
-
-      {/* Checkout Button */}
-      <TouchableOpacity
-        style={[styles.checkoutButton, selectedItemId === null && styles.disabledButton]}
-        onPress={handleCheckout}
-        disabled={selectedItemId === null}  
-      >
-        <Text style={styles.checkoutButtonText}>Checkout</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -199,6 +186,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   secondContainer: {
+    flex: 1,
     paddingHorizontal: 15,
   },
   cartItem: {
@@ -274,7 +262,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#BDBDBD',  // Grey out the button when disabled
+    backgroundColor: '#BDBDBD',
   },
   checkoutButtonText: {
     color: '#fff',

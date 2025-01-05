@@ -42,7 +42,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         name: product.name,
         price: product.price,
         quantity,
-        image: product.product_image,
+        image: product.product_image || " ",
         created_at: new Date(),
         subtotal: product.price * quantity
       };

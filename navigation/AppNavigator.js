@@ -15,6 +15,8 @@ import SignupScreen from '../screens/SignupScreen';
 
 //Main Screens
 import HomeScreen from '../screens/HomeScreen';
+import AllProducts from '../screens/AllProductsScreen';
+import AllShops from '../screens/AllShopsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import FavouritesScreen from '../screens/FavouritesScreen';
 import CartScreen from '../screens/CartScreen';
@@ -114,6 +116,8 @@ const Main = () => {
     >
       {/* Main App Screens */}
       <MainStack.Screen name="BottomTabs" component={BottomTabNavigator} />
+      <MainStack.Screen name="AllProducts" component={AllProducts} />
+      <MainStack.Screen name="AllShops" component={AllShops} />
       <MainStack.Screen name="Favourites" component={FavouritesScreen} />
       <MainStack.Screen name="ChatRoom" component={ChatRoomScreen} />
       <MainStack.Screen name="Cart" component={CartScreen} />
