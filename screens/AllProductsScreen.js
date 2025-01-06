@@ -14,7 +14,7 @@ import {
   Image 
 } from 'react-native';
 import { db } from '../firebaseConfig'; 
-import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, updateDoc} from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, updateDoc, onSnapshot, runTransaction } from 'firebase/firestore';
 import { AuthContext } from '../providers/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,6 +27,7 @@ export default function AllProductsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState([]);
+  const [likedProducts, setLikedProducts] = useState(new Set());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,6 +39,7 @@ export default function AllProductsScreen({ navigation }) {
         const productsList = productsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+          isFavourite: likedProducts.has(doc.id),
         }));
 
         const filteredProducts = productsList.filter((product) => 
@@ -53,6 +55,69 @@ export default function AllProductsScreen({ navigation }) {
 
     fetchData();
   }, [searchQuery, userAuthData.uid]);
+
+  useEffect(() => {
+    const userId = userAuthData.uid;
+    const likedProductsRef = collection(db, `users/${userId}/liked_products`);
+
+    const unsubscribe = onSnapshot(likedProductsRef, (snapshot) => {
+      const likes  = new Set(snapshot.docs.map((doc) => doc.data().product_id));
+      setLikedProducts(likes);
+      
+      setProducts((prevProducts) =>
+        prevProducts.map((product) => ({
+          ...product,
+          isFavourite: likes.has(product.id), 
+        }))
+      );
+    });
+
+    return () => unsubscribe();  
+  }, [userAuthData.uid]);
+
+  const toggleFavourite = async (product) => {
+    try {
+      const userId = userAuthData.uid;
+      const favouritesRef = collection(db, `users/${userId}/liked_products`);
+      const likedRef = doc(favouritesRef, product.id);
+      const productRef = doc(db, 'products', product.id);
+  
+      await runTransaction(db, async (transaction) => {
+        const productSnapshot = await transaction.get(productRef);
+        const currentLikesCount = productSnapshot.data()?.likes_count || 0;
+  
+        if (product.isFavourite) {
+          // If already liked, remove from favourites
+          transaction.delete(likedRef);
+          transaction.update(productRef, { likes_count: currentLikesCount - 1 });
+          console.log('Removed from favourites:', product.name);
+        } else {
+          // Add to favourites
+          transaction.set(likedRef, {
+            product_id: product.id,
+            name: product.name,
+            category: product.category || 'Uncategorized',
+            price: product.price,
+            description: product.description || 'No description available',
+            stock: product.stock,
+            liked_at: new Date().toISOString(),
+          });
+          transaction.update(productRef, { likes_count: currentLikesCount + 1 });
+          console.log('Added to favourites:', product.name);
+        }
+      });
+  
+      setProducts((prevProducts) =>
+        prevProducts.map((item) =>
+          item.id === product.id
+            ? { ...item, isFavourite: !item.isFavourite }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error('Error toggling favourite:', error);
+    }
+  };
 
   const filteredProducts = products.filter((product) => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -93,53 +158,6 @@ export default function AllProductsScreen({ navigation }) {
       </TouchableOpacity>
     </View>
   );
-
-  const toggleFavourite = async (product) => {
-    try {
-      const userId = userAuthData.uid; 
-      
-      const favouritesRef = collection(db, `users/${userId}/liked_products`);
-      const productDocRef = doc(favouritesRef, product.id);
-
-      const productRef = doc(db, 'products', product.id);
-
-      const productSnapshot = await getDoc(productRef);
-      const productData = productSnapshot.data();
-      const currentLikesCount = productData ? productData.likes_count : 0;
-
-      if (product.isFavourite) {
-        await deleteDoc(productDocRef);
-        console.log('Removed from favourites:', product.name);
-
-        await updateDoc(productRef, {
-          likes_count: currentLikesCount - 1,
-        });  
-      } else {
-        await setDoc(productDocRef, {
-          product_id: product.id,
-          name: product.name,
-          category: product.category || 'Uncategorized',
-          price: product.price,
-          description: product.description || 'No description available',
-          stock: product.stock,
-          liked_at: new Date().toISOString(),
-        });
-        console.log('Added to favourites:', product.name);
-
-        await updateDoc(productRef, {
-          likes_count: currentLikesCount + 1,
-        });
-      }
-
-      setProducts((prevProducts) =>
-        prevProducts.map((item) =>
-          item.id === product.id ? { ...item, isFavourite: !item.isFavourite } : item
-        )
-      );
-    } catch (error) {
-      console.error('Error toggling favourite:', error);
-    }
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>

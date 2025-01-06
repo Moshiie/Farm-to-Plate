@@ -26,13 +26,13 @@ const BuyerOrderDetailsScreen = ({ route, navigation }) => {
   const handleCancelOrder = async () => {
     setIsLoading(true);
     try {
-      const orderRef = doc(db, 'orders', order.order_id);
-      await updateDoc(orderRef, { status: 'Canceled' });
+      const orderRef = doc(db, 'orders', order.id);
+      await updateDoc(orderRef, { status: 'Cancelled' });
 
-      setStatus('Canceled');
-      Alert.alert('Order Canceled', 'Your order status has been updated to Canceled.');
+      setStatus('Cancelled');
+      Alert.alert('Order Cancelled', 'Your order status has been updated to Cancelled.');
 
-      navigation.replace('Home'); 
+      navigation.replace('BottomTabs'); 
     } catch (error) {
       console.error('Error updating order status:', error);
       Alert.alert('Error', 'Failed to cancel the order. Please try again.');
@@ -138,7 +138,7 @@ const BuyerOrderDetailsScreen = ({ route, navigation }) => {
               <Text style={styles.buttonText}>Back to Home</Text>
             </TouchableOpacity>
 
-            {status !== 'Canceled' && status !== 'Pending' && (
+            {status !== 'Cancelled' && status !== 'Pending' && status !== 'Completed' && (
               <TouchableOpacity style={styles.cancelButton} onPress={handleCancelOrder}>
                 <Text style={styles.buttonText}>Cancel Order</Text>
               </TouchableOpacity>

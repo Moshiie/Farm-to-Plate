@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ecommerce-app",
+    "name": "Farm to Plate",
     "slug": "ecommerce-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,10 +19,10 @@
       }
     },
     "android": {
+      "package": "com.teamvatte.farmtoplate",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "package": "com.teamvatte.farmtoplate",
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/farmtoplate.png"
       },
       "jsEngine": "hermes",
       "newArchEnabled": true
@@ -33,6 +33,11 @@
     "plugins": [
       "expo-font",
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bc016606-a7b4-4e28-a78c-f7b260da1ff8"
+      }
+    }
   }
 }

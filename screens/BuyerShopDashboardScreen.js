@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ImageBackground, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ImageBackground, ActivityIndicator, FlatList } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { db } from '../firebaseConfig'; 
-import { collection, getDocs, query, where, setDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, setDoc, doc, onSnapshot, getDoc, updateDoc, deleteDoc, runTransaction } from 'firebase/firestore';
 import { AuthContext } from '../providers/AuthProvider';  
+import { Ionicons } from '@expo/vector-icons';
 
 const BuyerShopDashboardScreen = ({ navigation, route }) => {
   const [farmerProducts, setFarmerProducts] = useState([]);
   const [storeInfo, setStoreInfo] = useState(route.params?.farmerDetails);
+  const [likedProducts, setLikedProducts] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const { userAuthData, userData } = useContext(AuthContext); 
 
   useEffect(() => {
-    setLoading(true);
     const fetchData = async () => {
+      setLoading(true);
       try {
         const farmerId = storeInfo?.farmer_id;
         if (!farmerId) return;
@@ -28,6 +30,7 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
         const productsList = productsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+          isFavourite: likedProducts.has(doc.id),
         }));
         setFarmerProducts(productsList);
 
@@ -40,10 +43,74 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
     };
 
     fetchData();
-  }, [storeInfo]);
+  }, [storeInfo, userAuthData.uid]);
+
+  useEffect(() => {
+    const userId = userAuthData.uid;
+    const likedProductsRef = collection(db, `users/${userId}/liked_products`);
+
+    const unsubscribe = onSnapshot(likedProductsRef, (snapshot) => {
+      const likes  = new Set(snapshot.docs.map((doc) => doc.data().product_id));
+      setLikedProducts(likes);
+      
+      setFarmerProducts((prevProducts) =>
+        prevProducts.map((product) => ({
+          ...product,
+          isFavourite: likes.has(product.id),
+        }))
+      );
+    });
+
+    return () => unsubscribe();  
+  }, [userAuthData.uid]);
+
+  const toggleFavourite = async (product) => {
+      try {
+        const userId = userAuthData.uid;
+        const favouritesRef = collection(db, `users/${userId}/liked_products`);
+        const likedRef = doc(favouritesRef, product.id);
+        const productRef = doc(db, 'products', product.id);
+    
+        await runTransaction(db, async (transaction) => {
+          const productSnapshot = await transaction.get(productRef);
+          const currentLikesCount = productSnapshot.data()?.likes_count || 0;
+    
+          if (product.isFavourite) {
+            // If already liked, remove from favourites
+            transaction.delete(likedRef);
+            transaction.update(productRef, { likes_count: currentLikesCount - 1 });
+            console.log('Removed from favourites:', product.name);
+          } else {
+            // Add to favourites
+            transaction.set(likedRef, {
+              product_id: product.id,
+              name: product.name,
+              category: product.category || 'Uncategorized',
+              price: product.price,
+              description: product.description || 'No description available',
+              stock: product.stock,
+              liked_at: new Date().toISOString(),
+            });
+            transaction.update(productRef, { likes_count: currentLikesCount + 1 });
+            console.log('Added to favourites:', product.name);
+          }
+        });
+    
+        setFarmerProducts((prevProducts) =>
+          prevProducts.map((item) =>
+            item.id === product.id
+              ? { ...item, isFavourite: !item.isFavourite }
+              : item
+          )
+        );
+      } catch (error) {
+        console.error('Error toggling favourite:', error);
+      }
+    };
+
 
   const handleCreateChatRoom = async () => {
-    const buyerId = userAuthData?.uid; // Assume userAuthData contains the logged-in user's UID
+    const buyerId = userAuthData?.uid; 
     const farmerId = storeInfo?.farmer_id;
 
     if (!buyerId || !farmerId) return;
@@ -79,8 +146,18 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
     }
   };
 
-  const renderProduct = (item) => (
-    <View style={styles.productCard} key={item.id}>
+  const renderProduct = ({ item }) => (
+    <View style={styles.productCard}>
+      <TouchableOpacity
+        style={styles.favouriteIcon}
+        onPress={() => toggleFavourite(item)}
+      > 
+        <Ionicons
+          name={item.isFavourite ? 'heart' : 'heart-outline'}
+          size={24}
+          color={item.isFavourite ? '#E63946' : 'black'}
+        />
+      </TouchableOpacity>
       <View style={styles.imagePlaceholder}>
         <MaterialIcons name="image" size={50} color="#555" />
       </View>
@@ -99,7 +176,7 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View contentContainerStyle={styles.container}>
       {storeInfo && (
         <View style={styles.header}>
           <Text style={styles.shopName}>{storeInfo.store_name}</Text>
@@ -128,7 +205,14 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
         <>
           {farmerProducts.length > 0 ? (
             <View style={styles.productListContainer}>
-              {farmerProducts.map(renderProduct)}
+              <FlatList 
+                data={farmerProducts} 
+                renderItem={renderProduct}
+                keyExtractor={(item) => item.id}
+                numColumns={2}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.productList}
+              />
             </View>
           ) : (
             <View style={styles.noProductsTextContainer}>
@@ -137,7 +221,7 @@ const BuyerShopDashboardScreen = ({ navigation, route }) => {
           )}
         </>
       )}
-    </ScrollView>
+    </View>
   );
 };
 
@@ -170,14 +254,16 @@ const styles = StyleSheet.create({
     marginBottom: 15
   },
   productListContainer: {
+    flex: 1,
     paddingHorizontal: 10,
-    flexDirection: 'row',   // Align items in a row
-    flexWrap: 'wrap',       // Allow wrapping to the next line
-    justifyContent: 'space-between', // Spread items out evenly
+    flexDirection: 'row',    
+    flexWrap: 'wrap',        
+    justifyContent: 'center', 
   },
   productCard: {
     backgroundColor: '#FFF',
     padding: 15,
+    marginHorizontal: 5,
     marginBottom: 15,
     borderRadius: 8,
     shadowColor: '#000',
@@ -187,6 +273,12 @@ const styles = StyleSheet.create({
     elevation: 5,
     width: '48%',           // Make each product take 48% of the row width
     marginBottom: 15,       // Margin to create space between rows
+  },
+  favouriteIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
   },
   imagePlaceholder: {
     height: 100,

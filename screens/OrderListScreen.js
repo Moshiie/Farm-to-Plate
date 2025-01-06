@@ -22,6 +22,7 @@ const OrderListScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [farmerDetails, setFarmerDetails] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   useEffect(() => {
     const fetchFarmerDetails = async () => {
@@ -81,6 +82,21 @@ const OrderListScreen = ({ navigation }) => {
         )
       );
     }
+  };
+  
+  const handleDateSort = () => {
+    const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(newSortOrder);
+
+    const sortedOrders = [...filteredOrders].sort((a, b) => {
+      const dateA = a.order_date?.toDate();
+      const dateB = b.order_date?.toDate();
+      if (dateA && dateB) {
+        return newSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      return 0;
+    });
+    setFilteredOrders(sortedOrders);
   };
 
   useEffect(() => {
@@ -142,6 +158,16 @@ const OrderListScreen = ({ navigation }) => {
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      {/* Sort Order (Date) */}
+      <TouchableOpacity style={styles.sortContainer} onPress={handleDateSort}>
+        <Text style={styles.sortText}>Sort by Date</Text>
+        <Ionicons
+          name={sortOrder === 'asc' ? 'arrow-down-circle' : 'arrow-up-circle'}
+          size={24}
+          color="#2E4C2D"
+        />
+      </TouchableOpacity>
 
       {/* Orders List */}
       {loading ? (
@@ -299,6 +325,20 @@ const styles = StyleSheet.create({
   },
   viewOrderText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
   noOrdersText: { textAlign: 'center', fontSize: 18, color: '#888' },
+  sortContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginHorizontal: 15,
+    marginVertical: 5,
+
+  },
+  sortText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: 5,
+    color: '#2E4C2D',
+  },
 });
 
 export default OrderListScreen;

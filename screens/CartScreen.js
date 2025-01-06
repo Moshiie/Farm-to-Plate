@@ -150,11 +150,21 @@ const CartScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         ) : (
+          <>
           <FlatList
             data={cartItems}
             keyExtractor={(item) => item.id}
             renderItem={renderCartItem}
           />
+          {/* Checkout Button */}
+          <TouchableOpacity
+            style={[styles.checkoutButton, selectedItemId === null && styles.disabledButton]}
+            onPress={handleCheckout}
+            disabled={selectedItemId === null}  
+          >
+            <Text style={styles.checkoutButtonText}>Checkout</Text>
+          </TouchableOpacity>
+          </>
         )}
       </View>
     </SafeAreaView>
