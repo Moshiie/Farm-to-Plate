@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { db } from '../firebaseConfig';
 import { collection, query, where, onSnapshot, getDocs, or, and } from 'firebase/firestore';
 import { AuthContext } from '../providers/AuthProvider';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const ChatScreen = ({ navigation }) => {
   const { userAuthData, userData } = useContext(AuthContext);
@@ -19,32 +20,32 @@ const ChatScreen = ({ navigation }) => {
         const chatRoomsQuery = query(chatRoomsRef, and(
           where("status", "==", "active"),
           or(
-            where('buyer_id', '==', userId), 
+            where('buyer_id', '==', userId),
             where('farmer_id', '==', userId)
           )
         ));
 
-        // Real-time updates with onSnapshot
         const unsubscribe = onSnapshot(chatRoomsQuery, async (querySnapshot) => {
           const fetchedChatRooms = await Promise.all(querySnapshot.docs.map(async (doc) => {
             const chatData = doc.data();
             const chatId = doc.id;
-  
-            // Avoid fetching unread messages in snapshot listener
+
             return {
               id: chatId,
               ...chatData,
               actingAs: chatData.buyer_id === userId ? 'Buyer' : 'Seller',
               lastMessage: chatData.last_message,
               lastMessageTime: chatData.last_message_time,
+              shopImage: chatData.shop_image || 'https://placeimg.com/50/50/any',
+              userImage: userData?.profile_image || 'https://placeimg.com/50/50/any',
             };
           }));
-  
+
           setChatRooms(fetchedChatRooms);
           setLoading(false);
         });
 
-        return unsubscribe; // Clean up listener on unmount
+        return unsubscribe;
       } catch (error) {
         console.error('Error fetching chat rooms:', error);
         setLoading(false);
@@ -52,34 +53,7 @@ const ChatScreen = ({ navigation }) => {
     };
 
     fetchChats();
-  }, [userAuthData?.uid]);
-
-  // Fetch unread message count separately
-  useEffect(() => {
-    const fetchUnreadMessageCount = async () => {
-      const unreadCounts = {};
-      for (const chat of chatRooms) {
-        const messagesRef = collection(db, 'chat_rooms', chat.id, 'messages');
-        const messagesQuery = query(
-          messagesRef,
-          where('isRead', '==', false),
-          where('senderId', '!=', userAuthData?.uid)
-        );
-        
-        const unreadMessagesSnapshot = await getDocs(messagesQuery);
-        unreadCounts[chat.id] = unreadMessagesSnapshot.size;
-      }
-      const updatedChatRooms = chatRooms.map(chat => ({
-        ...chat,
-        unreadCount: unreadCounts[chat.id] || 0,
-      }));
-      setChatRooms(updatedChatRooms);
-    };
-
-    if (chatRooms.length > 0) {
-      fetchUnreadMessageCount();
-    }
-  }, [chatRooms, userAuthData?.uid]);
+  }, [userAuthData?.uid, userData?.profile_image]);
 
   const formatTime = (time) => {
     if (!time) return '';
@@ -89,118 +63,134 @@ const ChatScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E4C2D" />
+      <LinearGradient colors={['#7A9F59', '#BAC8E0']} style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#fff" />
         <Text style={styles.loadingText}>Loading chats...</Text>
-      </View>
+      </LinearGradient>
     );
   }
 
   if (chatRooms.length === 0) {
     return (
-      <View style={styles.noChatsContainer}>
+      <LinearGradient colors={['#7A9F59', '#BAC8E0']} style={styles.noChatsContainer}>
         <Text style={styles.noChatsText}>No chats available</Text>
-      </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Top Bar */}
+    <LinearGradient colors={['#7A9F59', '#fff']} style={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.title}>
-          {userData?.first_name || userData?.last_name
-            ? `${userData.first_name ?? ''} ${userData.last_name ?? ''}`.trim()
-            : userData?.email || 'Guest User'}'s Chats
-        </Text>
+        <Text style={styles.title}>Chat Room</Text>
       </View>
 
-      <View style={styles.secondContainer}>
-        <FlatList
-          data={chatRooms}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.chatItem}
-              onPress={() => navigation.navigate('ChatRoom', { 
-                chatId: item.id, 
-                name: item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name 
-              })}
-            >
-              <View>
-                <Text style={styles.chatName}>Chat with{" "}
+      <FlatList
+        data={chatRooms}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.chatListContainer}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.chatItem}
+            onPress={() => navigation.navigate('ChatRoom', {
+              chatId: item.id,
+              name: item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name,
+            })}
+          >
+            <View style={styles.chatDetails}>
+              <Image source={{ uri: item.userImage }} style={styles.userImage} />
+              <View style={styles.chatTextContainer}>
+                <Text style={styles.chatName}>
                   {item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name}
                 </Text>
-                <Text style={styles.chatRoleIndicator}>
-                  {`You are acting as a ${item.actingAs}`}
+                <Text style={styles.chatMessage}>
+                  {item.last_message || 'No recent message'}
                 </Text>
-                <Text style={styles.chatMessage}>{item.last_message || 'No recent message'}</Text>
                 {item.lastMessageTime && (
                   <Text style={styles.chatTime}>{formatTime(item.lastMessageTime)}</Text>
                 )}
-                {item.unreadCount > 0 && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadBadgeText}>{item.unreadCount}</Text>
-                  </View>
-                )}
               </View>
-            </TouchableOpacity>
-          )}
-        />
-      </View>
-    </View>
+            </View>
+            {item.unreadCount > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>{item.unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
+      />
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e6f7f1', 
   },
   topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#2E4C2D',
-    paddingHorizontal: 15,
     paddingVertical: 20,
+    paddingHorizontal: 20,
+    backgroundColor: '#7A9F59',
+    alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFF',
+    fontWeight: '700',
+    color: '#fff',
   },
-  secondContainer: {
-    padding: 10,
+  chatListContainer: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
   },
   chatItem: {
-    backgroundColor: '#66b366',
+    backgroundColor: '#F5F5F5',
     padding: 15,
-    marginVertical: 5,
-    borderRadius: 8,
+    marginVertical: 8,
+    borderRadius: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 2,
+  },
+  chatDetails: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  userImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
+  },
+  chatTextContainer: {
+    flex: 1,
+  },
   chatName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  chatRoleIndicator: {
-    fontSize: 14,
     fontWeight: '600',
-    color: '#d1ffd1',
-    marginVertical: 4,
+    color: '#333',
   },
   chatMessage: {
     fontSize: 14,
-    color: '#fff',
+    color: '#555',
   },
   chatTime: {
     fontSize: 12,
-    color: '#d1ffd1',
+    color: '#999',
+  },
+  unreadBadge: {
+    backgroundColor: '#FF7043',
+    borderRadius: 15,
+    padding: 5,
+    minWidth: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unreadBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   loadingContainer: {
     flex: 1,
@@ -210,7 +200,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#888',
+    color: '#fff',
   },
   noChatsContainer: {
     flex: 1,
@@ -219,21 +209,7 @@ const styles = StyleSheet.create({
   },
   noChatsText: {
     fontSize: 18,
-    color: '#888',
-  },  
-  unreadBadge: {
-    position: 'absolute',
-    top: -5,
-    right: -150,
-    backgroundColor: 'red',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  unreadBadgeText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: '#fff',
   },
 });
 
