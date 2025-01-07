@@ -54,8 +54,12 @@ const ProductScreen = ({ route, navigation }) => {
       const vouchersRef = collection(db, 'voucher');
       const querySnapshot = await getDocs(vouchersRef);
       const fetchedVouchers = [];
+
       querySnapshot.forEach((doc) => {
-        fetchedVouchers.push(doc.data());
+        fetchedVouchers.push({
+          id: doc.id,
+          ...doc.data(),
+        });
       });
       setVouchers(fetchedVouchers);
       setModalVisible(true);
@@ -166,8 +170,7 @@ const ProductScreen = ({ route, navigation }) => {
       const orderForNavigation = {
         ...order,
         order_id: orderId,
-        order_date: new Date().toISOString(),
-        store_address: `${farmerDetails.default_pickup_address.address_line_1}, ${farmerDetails.default_pickup_address.city}, ${farmerDetails.default_pickup_address.zip_code}`, // Flatten the object to text
+        order_date: new Date().toISOString()
       };
 
       navigation.navigate('BuyerOrderDetails', { order: orderForNavigation }); // Navigate to home or another page after successful order

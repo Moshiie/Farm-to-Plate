@@ -100,12 +100,21 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         )}
         {orderDetails?.status === 'Processing' && (
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.cancelButton]} 
-            onPress={() => updateOrderStatus('Cancelled')}  // Cancel Order
-          >
-            <Text style={styles.actionButtonText}>Cancel Order</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.cancelButton]} 
+              onPress={() => updateOrderStatus('Cancelled')}  // Cancel Order
+            >
+              <Text style={styles.actionButtonText}>Cancel Order</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.pendingButton]} 
+              onPress={() => updateOrderStatus('Pending')}  // Cancel Order
+            >
+              <Text style={styles.actionButtonText}>Accept Order</Text>
+            </TouchableOpacity>
+          </>
         )}
       </View>
     </ScrollView>
@@ -169,6 +178,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: { backgroundColor: '#DC3545' },
+  pendingButton: { backgroundColor: 'orange' },
   actionButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   loading: { marginTop: 20 },
 });

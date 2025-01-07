@@ -122,18 +122,27 @@ const ChatRoomScreen = ({ route, navigation }) => {
   };
 
   const formatTime = (createdAt) => {
+    const now = new Date();
     const date = new Date(createdAt.seconds * 1000);
-    return `${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`;
+  
+    const isSameDay = 
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
+    
+    const isYesterday =
+      date.getDate() === now.getDate() - 1 &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
+  
+    if (isSameDay) {
+      return `${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`;
+    } else if (isYesterday) {
+      return `Yesterday at ${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`;
+    } else {
+      return `${date.toLocaleDateString()} at ${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`;
+    }
   };
-
-  if (!readyToRender) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6A994E" />
-        <Text style={styles.loadingText}>Loading chat...</Text>
-      </View>
-    );
-  }
 
   return (
     <KeyboardAvoidingView
@@ -263,7 +272,7 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    color: '#888',
+    color: '#b8b6b6',
     marginTop: 5,
     alignSelf: 'flex-end',
   },

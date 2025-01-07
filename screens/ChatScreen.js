@@ -36,8 +36,6 @@ const ChatScreen = ({ navigation }) => {
               actingAs: chatData.buyer_id === userId ? 'Buyer' : 'Seller',
               lastMessage: chatData.last_message,
               lastMessageTime: chatData.last_message_time,
-              shopImage: chatData.shop_image || 'https://placeimg.com/50/50/any',
-              userImage: userData?.profile_image || 'https://placeimg.com/50/50/any',
             };
           }));
 
@@ -97,7 +95,6 @@ const ChatScreen = ({ navigation }) => {
             })}
           >
             <View style={styles.chatDetails}>
-              <Image source={{ uri: item.userImage }} style={styles.userImage} />
               <View style={styles.chatTextContainer}>
                 <Text style={styles.chatName}>
                   {item.buyer_id === userAuthData.uid ? item.store_name : item.buyer_name}
@@ -152,6 +149,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     elevation: 2,
+    paddingLeft: 15,
   },
   chatDetails: {
     flexDirection: 'row',

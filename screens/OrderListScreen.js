@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../providers/AuthProvider';
 import { db } from '../firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useFocusEffect } from '@react-navigation/native';
 
 const OrderListScreen = ({ navigation }) => {
   const { userAuthData } = useContext(AuthContext);
@@ -102,6 +103,12 @@ const OrderListScreen = ({ navigation }) => {
   useEffect(() => {
     fetchOrders();
   }, [userAuthData?.uid]);
+  
+  useFocusEffect(
+    useCallback(() => {
+      fetchOrders();  
+    }, [])
+  );
 
   useEffect(() => {
     filterOrdersByTab();
