@@ -11,10 +11,11 @@ import {
   StatusBar,
   ScrollView,
   ActivityIndicator, 
-  Image 
+  Image,
+  Animated
 } from 'react-native';
 import { db } from '../firebaseConfig'; 
-import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, updateDoc, onSnapshot, runTransaction} from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, updateDoc, onSnapshot, runTransaction } from 'firebase/firestore';
 import { AuthContext } from '../providers/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -30,6 +31,7 @@ export default function HomeScreen({ navigation }) {
   const [products, setProducts] = useState([]);
   const [likedProducts, setLikedProducts] = useState(new Set());
   const [stores, setStores] = useState([]);
+  const [assistantExpanded, setAssistantExpanded] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,7 +44,7 @@ export default function HomeScreen({ navigation }) {
           ...doc.data(),
           isFavourite: likedProducts.has(doc.id),
         }));
- 
+
         const filteredProducts = productsList.filter((product) => 
           product.farmer_id !== userAuthData.uid
         );
@@ -62,9 +64,9 @@ export default function HomeScreen({ navigation }) {
           });
         }
 
-        // Filter out the stores that belong to the user
         const filteredStores = storeList.filter((store) =>
-          store.farmer_id !== userAuthData.uid && store.store_name.toLowerCase().includes(searchQuery.toLowerCase())
+          store.farmer_id !== userAuthData.uid &&
+          store.store_name.toLowerCase().includes(searchQuery.toLowerCase())
         );
         setStores(filteredStores);
       } catch (error) {
@@ -82,18 +84,17 @@ export default function HomeScreen({ navigation }) {
     const likedProductsRef = collection(db, `users/${userId}/liked_products`);
 
     const unsubscribe = onSnapshot(likedProductsRef, (snapshot) => {
-      const likes  = new Set(snapshot.docs.map((doc) => doc.data().product_id));
+      const likes = new Set(snapshot.docs.map((doc) => doc.data().product_id));
       setLikedProducts(likes);
-      
-      setProducts((prevProducts) =>
-        prevProducts.map((product) => ({
-          ...product,
-          isFavourite: likes.has(product.id), 
+      setProducts((prev) =>
+        prev.map((p) => ({
+          ...p,
+          isFavourite: likes.has(p.id),
         }))
       );
     });
 
-    return () => unsubscribe();  
+    return () => unsubscribe();
   }, [userAuthData.uid]);
 
   const toggleFavourite = async (product) => {
@@ -102,37 +103,31 @@ export default function HomeScreen({ navigation }) {
       const favouritesRef = collection(db, `users/${userId}/liked_products`);
       const likedRef = doc(favouritesRef, product.id);
       const productRef = doc(db, 'products', product.id);
-  
+
       await runTransaction(db, async (transaction) => {
         const productSnapshot = await transaction.get(productRef);
         const currentLikesCount = productSnapshot.data()?.likes_count || 0;
-  
+
         if (product.isFavourite) {
-          // If already liked, remove from favourites
           transaction.delete(likedRef);
           transaction.update(productRef, { likes_count: currentLikesCount - 1 });
-          console.log('Removed from favourites:', product.name);
         } else {
-          // Add to favourites
           transaction.set(likedRef, {
             product_id: product.id,
             name: product.name,
             category: product.category || 'Uncategorized',
             price: product.price,
-            description: product.description || 'No description available',
+            description: product.description || '',
             stock: product.stock,
             liked_at: new Date().toISOString(),
           });
           transaction.update(productRef, { likes_count: currentLikesCount + 1 });
-          console.log('Added to favourites:', product.name);
         }
       });
-  
-      setProducts((prevProducts) =>
-        prevProducts.map((item) =>
-          item.id === product.id
-            ? { ...item, isFavourite: !item.isFavourite }
-            : item
+
+      setProducts((prev) =>
+        prev.map((item) =>
+          item.id === product.id ? { ...item, isFavourite: !item.isFavourite } : item
         )
       );
     } catch (error) {
@@ -150,23 +145,15 @@ export default function HomeScreen({ navigation }) {
 
   const renderProduct = ({ item }) => (
     <View style={styles.productCard}>
-      <TouchableOpacity
-        style={styles.favouriteIcon}
-        onPress={() => toggleFavourite(item)}
-      > 
+      <TouchableOpacity style={styles.favouriteIcon} onPress={() => toggleFavourite(item)}>
         <Ionicons
           name={item.isFavourite ? 'heart' : 'heart-outline'}
           size={24}
           color={item.isFavourite ? '#E63946' : 'black'}
         />
       </TouchableOpacity>
-      
       {item.product_image ? (
-        <Image
-          source={{ uri: item.product_image }}
-          style={styles.productImage}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: item.product_image }} style={styles.productImage} />
       ) : (
         <View style={styles.imagePlaceholder}>
           <Ionicons name="image-outline" size={50} color="#555" />
@@ -184,26 +171,23 @@ export default function HomeScreen({ navigation }) {
     </View>
   );
 
-  const renderStore = ({ item }) => {
-    return (
-      <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('BuyerShopDashboard', { farmerDetails: item })}>
-        {item.store_photo && !imageError ? (
-          <Image  
-            source={{ uri: item.store_photo }}
-            style={styles.shopImage}
-            resizeMode="cover"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <Ionicons name="storefront-outline" size={40} color="#555" style={styles.shopIcon} />
-        )}
-        <View style={styles.shopDetails}>
-          <Text style={styles.shopName}>{item.store_name}</Text>
-          <Text style={styles.shopLocation}>{item.store_description}</Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  const renderStore = ({ item }) => (
+    <TouchableOpacity style={styles.shopCard} onPress={() => navigation.navigate('BuyerShopDashboard', { farmerDetails: item })}>
+      {item.store_photo && !imageError ? (
+        <Image
+          source={{ uri: item.store_photo }}
+          style={styles.shopImage}
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        <Ionicons name="storefront-outline" size={40} color="#555" style={styles.shopIcon} />
+      )}
+      <View style={styles.shopDetails}>
+        <Text style={styles.shopName}>{item.store_name}</Text>
+        <Text style={styles.shopLocation}>{item.store_description}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -243,53 +227,75 @@ export default function HomeScreen({ navigation }) {
             onChangeText={setSearchQuery}
           />
         </View>
-    
-        {/* Content Scrollable View */}
+
         {loading ? (
-          <View style={styles.loadingWrapper}> 
+          <View style={styles.loadingWrapper}>
             <ActivityIndicator size="large" color="#006400" />
           </View>
         ) : (
-          <View contentContainerStyle={styles.contentContainer}>
-           {/* Products Section */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Products</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AllProducts')}>
-              <Text style={styles.viewAllText}>View All Products</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={filteredProducts} 
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.productList}
-          />
+          <ScrollView contentContainerStyle={styles.contentContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Products</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('AllProducts')}>
+                <Text style={styles.viewAllText}>View All Products</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={filteredProducts}
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.productList}
+            />
 
-          {/* Shops Section */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Shops</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AllShops')}>
-              <Text style={styles.viewAllText}>View All Shops</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={filteredStores}
-            renderItem={renderStore}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.shopList}
-          />
-          </View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Shops</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('AllShops')}>
+                <Text style={styles.viewAllText}>View All Shops</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={filteredStores}
+              renderItem={renderStore}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.shopList}
+            />
+          </ScrollView>
         )}
+
+        {/* 🧠 Virtual Assistant Floating Button */}
+        <TouchableOpacity
+          style={styles.virtualAssistantButton}
+          onPress={() => navigation.navigate('VirtualAssistantScreen')}
+        >
+          <Ionicons
+            name={assistantExpanded ? 'chatbox-ellipses' : 'chatbox'}
+            size={assistantExpanded ? 40 : 30}
+            color="white"
+          />
+        </TouchableOpacity>
       </LinearGradient>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  virtualAssistantButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#4CAF50',
+    borderRadius: 50,
+    padding: 16,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#7A9F59',

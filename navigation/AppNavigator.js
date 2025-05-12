@@ -49,6 +49,7 @@ import ProductScreen from '../screens/ProductScreen';
 import ProductDetailsScreen from '../screens/ProductDetailsScreen';
 import BuyerOrderDetailsScreen from '../screens/BuyerOrderDetailsScreen';
 import BuyerOrderListScreen from '../screens/BuyerOrderListScreen';
+import VirtualAssistantScreen from '../screens/VirtualAssistantScreen';
 
 //Loading Utility
 import Loading from "../screens/utils/Loading";
@@ -123,6 +124,7 @@ const Main = () => {
       <MainStack.Screen name="Cart" component={CartScreen} />
       <MainStack.Screen name="AddressForm" component={AddressForm} />
       <MainStack.Screen name="MapScreen" component={MapScreen} />
+      <MainStack.Screen name="VirtualAssistantScreen" component={VirtualAssistantScreen} />
 
       {/* Help Center & Terms and Policies*/}
       <MainStack.Screen name="HelpCenter" component={HelpCenterScreen} />
